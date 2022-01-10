@@ -9,37 +9,37 @@
 {% if group is defined %}
 {%   if group.address_group is defined %}
 {%     for group_name, group_conf in group.address_group.items() %}
-define A_{{ group_name }} = {
+define A_{{ group_name }} = { {% if group_conf.address|length > 0 %}
     {{ group_conf.address | join(",") }}
-}
+{% endif %} }
 {%     endfor %}
 {%   endif %}
 {%   if group.ipv6_address_group is defined %}
 {%     for group_name, group_conf in group.ipv6_address_group.items() %}
-define A6_{{ group_name }} = {
+define A6_{{ group_name }} = { {% if group_conf.address|length > 0 %}
     {{ group_conf.address | join(",") }}
-}
+{% endif %}}
 {%     endfor %}
 {%   endif %}
 {%   if group.network_group is defined %}
 {%     for group_name, group_conf in group.network_group.items() %}
-define N_{{ group_name }} = {
+define N_{{ group_name }} = { {% if group_conf.network|length > 0 %}
     {{ group_conf.network | join(",") }}
-}
+{% endif %} }
 {%     endfor %}
 {%   endif %}
 {%   if group.ipv6_network_group is defined %}
 {%     for group_name, group_conf in group.ipv6_network_group.items() %}
-define N6_{{ group_name }} = {
+define N6_{{ group_name }} = { {% if group_conf.network|length > 0 %}
     {{ group_conf.network | join(",") }}
-}
+{% endif %} }
 {%     endfor %}
 {%   endif %}
 {%   if group.port_group is defined %}
 {%     for group_name, group_conf in group.port_group.items() %}
-define P_{{ group_name }} = {
+define P_{{ group_name }} = { {% if group_conf.port|length > 0 %}
     {{ group_conf.port | join(",") }}
-}
+{% endif %} }
 {%     endfor %}
 {%   endif %}
 {% endif %}
