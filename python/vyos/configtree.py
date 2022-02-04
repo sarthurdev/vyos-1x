@@ -12,6 +12,7 @@
 # You should have received a copy of the GNU Lesser General Public License along with this library;
 # if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
+import os
 import re
 import json
 
@@ -45,6 +46,7 @@ class ConfigTree(object):
     def __init__(self, config_string, libpath='/usr/lib/libvyosconfig.so.0'):
         self.__config = None
         self.__lib = cdll.LoadLibrary(libpath)
+        self.__migration = os.environ.get('VYOS_MIGRATION')
 
         # Import functions
         self.__from_string = self.__lib.from_string
@@ -177,17 +179,26 @@ class ConfigTree(object):
             else:
                 self.__set_add_value(self.__config, path_str, str(value).encode())
 
+        if self.__migration:
+            print(' - set "{0}" (Value: {1}, Replace: {2})'.format(path_str.decode(), value or 'N/A', replace))
+
     def delete(self, path):
         check_path(path)
         path_str = " ".join(map(str, path)).encode()
 
         self.__delete(self.__config, path_str)
 
+        if self.__migration:
+            print(' - delete "{0}"'.format(path_str.decode()))
+
     def delete_value(self, path, value):
         check_path(path)
         path_str = " ".join(map(str, path)).encode()
 
         self.__delete_value(self.__config, path_str, value.encode())
+
+        if self.__migration:
+            print(' - delete "{0}" (Value: {1})'.format(path_str.decode(), value or 'N/A'))
 
     def rename(self, path, new_name):
         check_path(path)
@@ -202,6 +213,9 @@ class ConfigTree(object):
         if (res != 0):
             raise ConfigTreeError("Path [{}] doesn't exist".format(path))
 
+        if self.__migration:
+            print(' - rename "{0}" to "{1}"'.format(path_str.decode(), newname_str.decode()))
+
     def copy(self, old_path, new_path):
         check_path(old_path)
         check_path(new_path)
@@ -214,6 +228,9 @@ class ConfigTree(object):
         res = self.__copy(self.__config, oldpath_str, newpath_str)
         if (res != 0):
             raise ConfigTreeError("Path [{}] doesn't exist".format(old_path))
+
+        if self.__migration:
+            print(' - copy "{0}" to "{1}"'.format(oldpath_str.decode(), newpath_str.decode()))
 
     def exists(self, path):
         check_path(path)

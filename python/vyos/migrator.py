@@ -17,6 +17,7 @@ import sys
 import os
 import json
 import subprocess
+import time
 import vyos.version
 import vyos.defaults
 import vyos.systemversions as systemversions
@@ -107,6 +108,8 @@ class Migrator(object):
 
         rev_versions = {}
 
+        os.environ['VYOS_MIGRATION'] = '1'
+
         for key in sys_keys:
             sys_ver = sys_versions[key]
             if key in cfg_versions:
@@ -122,9 +125,10 @@ class Migrator(object):
 
                 migrate_script = os.path.join(migrate_script_dir,
                         '{}-to-{}'.format(cfg_ver, next_ver))
+                result = b''
 
                 try:
-                    subprocess.check_call([migrate_script,
+                    result = subprocess.check_output([migrate_script,
                         self._config_file])
                 except FileNotFoundError:
                     pass
@@ -136,6 +140,8 @@ class Migrator(object):
                 if log:
                     try:
                         log.write('{0}\n'.format(migrate_script))
+                        if result:
+                            log.write('{0}\n'.format(result.decode()))
                     except Exception as e:
                         print("Error writing log: {0}".format(e))
 
@@ -145,6 +151,8 @@ class Migrator(object):
 
         if log:
             log.close()
+
+        del os.environ['VYOS_MIGRATION']
 
         return rev_versions
 
