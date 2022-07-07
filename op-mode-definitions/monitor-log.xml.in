@@ -74,6 +74,54 @@
               </node>
             </children>
           </node>
+          <node name="firewall">
+            <properties>
+              <help>Monitor last lines of firewall log</help>
+            </properties>
+            <children>
+              <tagNode name="ipv6-name">
+                <properties>
+                  <help>Monitor log for a specified firewall (IPv6)</help>
+                  <completionHelp>
+                    <path>firewall ipv6-name</path>
+                  </completionHelp>
+                </properties>
+                <command>journalctl --no-hostname --boot --follow --dmesg | egrep "\[$5-([0-9]+|default)-[ADR]\]"</command>
+                <children>
+                  <tagNode name="rule">
+                    <properties>
+                      <help>Monitor log for a rule in the specified firewall</help>
+                      <completionHelp>
+                        <path>firewall ipv6-name ${COMP_WORDS[4]} rule</path>
+                      </completionHelp>
+                    </properties>
+                    <command>journalctl --no-hostname --boot --follow --dmesg | grep -e "\[$5-$7-[ADR]\]"</command>
+                  </tagNode>
+                </children>
+              </tagNode>
+              <tagNode name="name">
+                <properties>
+                  <help>Monitor log for a specified firewall (IPv4)</help>
+                  <completionHelp>
+                    <path>firewall name</path>
+                  </completionHelp>
+                </properties>
+                <command>journalctl --no-hostname --boot --follow --dmesg | egrep "\[$5-([0-9]+|default)-[ADR]\]"</command>
+                <children>
+                  <tagNode name="rule">
+                    <properties>
+                      <help>Monitor log for a rule in the specified firewall</help>
+                      <completionHelp>
+                        <path>firewall name ${COMP_WORDS[4]} rule</path>
+                      </completionHelp>
+                    </properties>
+                    <command>journalctl --no-hostname --boot --follow --dmesg | egrep "\[$5-$7-[ADR]\]"</command>
+                  </tagNode>
+                </children>
+              </tagNode>
+            </children>
+            <command>journalctl --no-hostname --boot --follow --dmesg | egrep "(\sIN=|OUT=|MAC=|SRC=|DST=|LEN=|ID=)+"</command>
+          </node>
           <leafNode name="flow-accounting">
             <properties>
               <help>Monitor last lines of flow-accounting log</help>

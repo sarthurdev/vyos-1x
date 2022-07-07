@@ -138,6 +138,7 @@
                 </children>
               </tagNode>
             </children>
+            <command>cat $(printf "%s\n" /var/log/messages* | sort -nr ) | egrep "\[.+-([0-9]+|default)-[ADR]\]"</command>
           </node>
           <leafNode name="flow-accounting">
             <properties>
