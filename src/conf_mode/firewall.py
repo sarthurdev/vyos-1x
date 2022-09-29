@@ -58,7 +58,6 @@ sysfs_config = {
     'log_martians': {'sysfs': '/proc/sys/net/ipv4/conf/all/log_martians'},
     'receive_redirects': {'sysfs': '/proc/sys/net/ipv4/conf/*/accept_redirects'},
     'send_redirects': {'sysfs': '/proc/sys/net/ipv4/conf/*/send_redirects'},
-    'source_validation': {'sysfs': '/proc/sys/net/ipv4/conf/*/rp_filter', 'disable': '0', 'strict': '1', 'loose': '2'},
     'syn_cookies': {'sysfs': '/proc/sys/net/ipv4/tcp_syncookies'},
     'twa_hazards_protection': {'sysfs': '/proc/sys/net/ipv4/tcp_rfc1337'}
 }
@@ -134,12 +133,9 @@ def get_config(config=None):
     # XXX: T2665: we currently have no nice way for defaults under tag
     # nodes, thus we load the defaults "by hand"
     default_values = defaults(base)
-    for tmp in ['name', 'ipv6_name']:
+    for tmp in ['name', 'ipv6_name', 'interface', 'zone']:
         if tmp in default_values:
             del default_values[tmp]
-
-    if 'zone' in default_values:
-        del default_values['zone']
 
     firewall = dict_merge(default_values, firewall)
 
@@ -156,6 +152,11 @@ def get_config(config=None):
         for ipv6_name in firewall['ipv6_name']:
             firewall['ipv6_name'][ipv6_name] = dict_merge(default_values,
                                                           firewall['ipv6_name'][ipv6_name])
+
+    if 'interface' in firewall:
+        default_values = defaults(base + ['interface'])
+        for ifname in firewall['interface']:
+            firewall['interface'][ifname] = dict_merge(default_values, firewall['interface'][ifname])
 
     if 'zone' in firewall:
         default_values = defaults(base + ['zone'])

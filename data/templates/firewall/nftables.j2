@@ -4,6 +4,29 @@
 {% import 'firewall/nftables-zone.j2' as zone_tmpl %}
 
 {% if first_install is not vyos_defined %}
+delete table inet vyos_rpfilter
+{% endif %}
+table inet vyos_rpfilter {
+    chain PREROUTING {
+        type filter hook prerouting priority -300; policy accept;
+{% if interface is vyos_defined %}
+{%     for ifname, ifconf in interface.items() %}
+{%         if ifconf.source_validation is vyos_defined('loose') %}
+        iifname {{ ifname }} fib saddr oif 0 counter drop
+{%         elif ifconf.source_validation is vyos_defined('strict') %}
+        iifname {{ ifname }} fib saddr . iif oif 0 counter drop
+{%         endif %}
+{%     endfor %}
+{% endif %}
+{% if source_validation is vyos_defined('loose') %}
+        fib saddr oif 0 counter drop
+{% elif source_validation is vyos_defined('strict') %}
+        fib saddr . iif oif 0 counter drop
+{% endif %}
+    }
+}
+
+{% if first_install is not vyos_defined %}
 delete table ip vyos_filter
 {% endif %}
 table ip vyos_filter {
