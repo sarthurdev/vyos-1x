@@ -4,7 +4,7 @@
 # interpret #include statements to include nested XML fragments and
 # snippets in documents.
 #
-# Copyright (C) 2021 VyOS maintainers and contributors
+# Copyright (C) 2022 VyOS maintainers and contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 or later as
@@ -22,20 +22,35 @@
 
 import os
 import re
+import shlex
 import sys
 
-regexp = re.compile(r'^ *#include <(.+)>$')
+regexp = re.compile(r'^ *#include <([^>]+)>((?: [a-zA-Z_]+=.+)*)$')
+value_regexp = re.compile(r'>({([a-zA-Z_]+)(?:\|([^}]+))?})<') # search for {key} or {key:default} inside tags
 
-def parse_file(filename):
+def parse_values(values):
+    out = {}
+    if values:
+        pairs = shlex.split(values.lstrip())
+        for pair in pairs:
+            key, value = pair.split("=", 1)
+            out[key] = value
+    return out
+
+def parse_file(filename, values=None):
     lines = ""
+    value_dict = parse_values(values)
     with open(filename, 'r') as f:
         while True:
             line = f.readline()
             if line:
                 result = regexp.match(line)
                 if result:
-                    lines += parse_file(os.path.join(directory, result.group(1)))
+                    lines += parse_file(os.path.join(directory, result.group(1)), result.group(2))
                 else:
+                    for value_find in value_regexp.findall(line):
+                        full_match, key, default_value = value_find
+                        line = line.replace(full_match, value_dict[key] if key in value_dict else default_value)
                     lines += line
             else:
                 return lines

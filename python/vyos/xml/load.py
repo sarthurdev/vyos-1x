@@ -12,6 +12,8 @@
 # if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
 
 import glob
+import re
+import shlex
 
 from os.path import join
 from os.path import abspath
@@ -83,19 +85,35 @@ def _merge(dict1, dict2):
             raise RuntimeError('parsing issue - we messed up?')
     return dict1
 
+regexp = re.compile(r'^ *#include <([^>]+)>((?: [a-zA-Z_]+=.+)*)$')
+value_regexp = re.compile(r'>({([a-zA-Z_]+)(?:\|([^}]+))?})<') # search for {key} or {key:default} inside tags
 
-def _include(fname, folder=''):
+def _parse_include_values(values):
+    out = {}
+    if values:
+        pairs = shlex.split(values.lstrip())
+        for pair in pairs:
+            key, value = pair.split("=", 1)
+            out[key] = value
+    return out
+
+def _include(fname, folder='', values=None):
     """
     return the content of a file, including any file referenced with a #include
     """
     if not folder:
         folder = dirname(fname)
     content = ''
+    value_dict = _parse_include_values(values)
     with open(fname, 'r') as r:
         for line in r.readlines():
-            if '#include' in line:
-                content += _include(join(folder,line.strip()[10:-1]), folder)
+            result = regexp.match(line)
+            if result:
+                content += _include(join(folder, result.group(1)), folder, result.group(2))
                 continue
+            for value_find in value_regexp.findall(line):
+                full_match, key, default_value = value_find
+                line = line.replace(full_match, value_dict[key] if key in value_dict else default_value)
             content += line
     return content
 

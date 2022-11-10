@@ -106,10 +106,7 @@
               </constraint>
             </properties>
             <children>
-              #include <include/port-number.xml.i>
-              <leafNode name="port">
-                <defaultValue>161</defaultValue>
-              </leafNode>
+              #include <include/port-number-default.xml.i> defaultValue=161
             </children>
           </tagNode>
           <leafNode name="location">
@@ -187,10 +184,7 @@
                   <help>Community used when sending trap information</help>
                 </properties>
               </leafNode>
-              #include <include/port-number.xml.i>
-              <leafNode name="port">
-                <defaultValue>162</defaultValue>
-              </leafNode>
+              #include <include/port-number-default.xml.i> defaultValue=162
             </children>
           </tagNode>
           <node name="v3">
@@ -291,10 +285,7 @@
                       #include <include/snmp/authentication-type.xml.i>
                     </children>
                   </node>
-                  #include <include/port-number.xml.i>
-                  <leafNode name="port">
-                    <defaultValue>162</defaultValue>
-                  </leafNode>
+                  #include <include/port-number-default.xml.i> defaultValue=162
                   <node name="privacy">
                     <properties>
                       <help>Defines the privacy</help>
