@@ -31,6 +31,7 @@ from vyos.firewall import fqdn_config_parse
 from vyos.firewall import external_list_update
 from vyos.firewall import external_list_file_dir
 from vyos.firewall import geoip_update
+from vyos.task_scheduler import split_interval
 from vyos.template import render
 from vyos.util import call
 from vyos.util import cmd
@@ -333,6 +334,21 @@ def verify(firewall):
                 groups = firewall['group'][group_type]
                 for group_name, group in groups.items():
                     verify_nested_group(group_name, group, groups, [])
+
+        if 'external_list' in firewall['group']:
+            for name, group_conf in firewall['group']['external_list'].items():
+                if len({'interval', 'crontab_spec'} & set(group_conf)) != 1:
+                    raise ConfigError(f'External list {name}: must define one of interval or crontab-spec')
+
+                if 'interval' in group_conf:
+                    value, suffix = split_interval(group_conf['interval'])
+
+                    if (not suffix or suffix == "m") and value > 60:
+                        raise ConfigError(f'External list {name}: interval in minutes must not exceed 60')
+                    elif suffix == "h" and value > 24:
+                        raise ConfigError(f'External list {name}: interval in hours must not exceed 24')
+                    elif suffix == "d" and value > 31:
+                        raise ConfigError(f'External list {name}: interval in days must not exceed 31')
 
     for name in ['name', 'ipv6_name']:
         if name in firewall:

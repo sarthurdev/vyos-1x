@@ -28,9 +28,7 @@ from socket import getaddrinfo
 from time import strftime
 
 from vyos.remote import download
-from vyos.task_scheduler import task_scheduler_apply
-from vyos.task_scheduler import task_scheduler_generate
-from vyos.task_scheduler import task_scheduler_verify
+from vyos.task_scheduler import format_crontab_line
 from vyos.template import is_ipv4
 from vyos.template import is_ipv6
 from vyos.template import render
@@ -39,6 +37,7 @@ from vyos.util import cmd
 from vyos.util import dict_search_args
 from vyos.util import dict_search_recursive
 from vyos.util import run
+from vyos.util import write_file
 
 # Domain Resolver
 
@@ -385,6 +384,7 @@ nftables_external_list_conf = '/run/nftables-external-list.conf'
 external_list_file_dir = '/usr/share/vyos-external-list'
 external_list_lock_file = '/run/vyos-external-list.lock'
 external_list_crontab_file = '/etc/cron.d/vyos-external-list'
+external_list_script = '/usr/libexec/vyos/external-list-update.py'
 
 def external_list_load_data(lists=[]):
     if not lists:
@@ -461,19 +461,17 @@ def external_list_update(firewall, name=None, force=False):
             return True
 
         names = []
-        tasks = []
+        crontab_lines = []
         for key in firewall['group']['external_list']:
             interval = dict_search_args(firewall, 'group', 'external_list', key, 'interval')
             spec = dict_search_args(firewall, 'group', 'external_list', key, 'crontab-spec')
+
             if interval or spec:
-                task = {
-                        "name": key,
-                        "interval": interval,
-                        "spec": spec,
-                        "executable": '/usr/libexec/vyos/external-list-update.py',
-                        "args": f'--force --name {key}'
-                       }
-                tasks.append(task)
+                command = f'{external_list_script} --force --name {key}'
+                line = format_crontab_line(command, spec=spec, interval=interval)
+                if line:
+                    crontab_lines.append(line)
+
             if not name or name == key:
                 list_file = os.path.join(external_list_file_dir, key + '.csv')
                 if not os.path.exists(list_file) or force:
@@ -484,13 +482,8 @@ def external_list_update(firewall, name=None, force=False):
                         continue
                 names.append(key)
 
-        if tasks:
-            try:
-                task_scheduler_verify(tasks)
-                task_scheduler_generate(tasks, external_list_crontab_file)
-                task_scheduler_apply(tasks)
-            except ConfigError as e:
-                print(e)
+        if crontab_lines:
+            write_file(external_list_crontab_file, "".join(crontab_lines))
         elif os.path.exists(external_list_crontab_file):
             os.remove(external_list_crontab_file)
 

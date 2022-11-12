@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import unittest
 
 from glob import glob
@@ -88,6 +89,48 @@ class TestFirewall(VyOSUnitTestSHIM.TestCase):
             count += 1
             sleep(1)
         return False
+
+    def test_external_list(self):
+        from vyos.firewall import external_list_crontab_file
+        test_file = '/tmp/external_list.txt'
+        test_name = 'smoketest'
+        test_lines = [
+            '192.0.2.1',
+            '192.0.2.50',
+            '10.72.47.13'
+        ]
+
+        with open(test_file, 'w') as f:
+            f.write("\n".join(test_lines))
+
+        self.cli_set(['firewall', 'group', 'external-list', test_name, 'url', test_file])
+
+        # Missing interval/crontab-spec
+        with self.assertRaises(ConfigSessionError):
+            self.cli_commit()
+
+        self.cli_set(['firewall', 'group', 'external-list', test_name, 'interval', '30m'])
+        self.cli_set(['firewall', 'name', test_name, 'rule', '1', 'action', 'drop'])
+        self.cli_set(['firewall', 'name', test_name, 'rule', '1', 'destination', 'group', 'external-list', test_name])
+
+        self.cli_commit()
+
+        # Verify crontab file exists and valid content
+        self.assertTrue(os.path.exists(external_list_crontab_file))
+
+        with open(external_list_crontab_file, 'r') as f:
+            contents = f.read()
+            self.assertTrue('*/30' in contents)
+            self.assertTrue(f'--name {test_name}' in contents)
+
+        nftables_search = [
+            [f'set L_{test_name}'],
+            ['elements = { 10.72.47.13, 192.0.2.1,'],
+            ['192.0.2.50 }'],
+            [f'ip daddr @L_{test_name}', 'drop']
+        ]
+
+        self.verify_nftables(nftables_search, 'ip vyos_filter')
 
     def test_geoip(self):
         self.cli_set(['firewall', 'name', 'smoketest', 'rule', '1', 'action', 'drop'])
