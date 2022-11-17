@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+#
+# Copyright (C) 2019-2020 VyOS maintainers and contributors
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 or later as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import json
+import os
+import socketserver
+
+from time import sleep
+
+from vyos.configsession import ConfigSession
+from vyos.configsession import ConfigSessionError
+from vyos import ConfigError
+from vyos.defaults import commit_lock
+from vyos.util import cmd
+from vyos.util import run
+
+test_interface = 'eth0'
+test_address = '192.0.2.{}'
+test_suffix = '/24'
+test_port = 5555
+
+save_config = '/tmp/vyos-smoketest-save'
+
+class SmoketestAgentHandler(socketserver.BaseRequestHandler):
+    def handle(self):
+        data = self.request.recv(4096).strip()
+        agent = self.server.agent
+
+        if agent.debug:
+            print('recv:', data)
+
+        obj = json.loads(data)
+        retval = {'success':True, 'data': ''}
+
+        try:
+            if obj['action'] == 'set':
+                agent.cli_set(obj['data']['config'])
+            elif obj['action'] == 'delete':
+                agent.cli_delete(obj['data']['config'])
+            elif obj['action'] == 'commit':
+                agent.cli_commit()
+            elif obj['action'] == 'get_frr_config':
+                retval['data'] = agent.getFRRconfig(**obj['data'])
+            elif obj['action'] == 'tear_down':
+                agent.tear_down()
+            elif obj['action'] == 'shutdown':
+                self.server._BaseServer__shutdown_request = True
+        except ConfigError as err:
+            retval = {'error': 'ConfigError', 'message': str(err)}
+        except ConfigSessionError as err:
+            retval = {'error': 'ConfigSessionError', 'message': str(err)}
+        except Exception as err:
+            retval = {'error': 'Exception', 'message': str(err)}
+
+        to_send = json.dumps(retval)
+
+        if agent.debug:
+            print('send:', to_send)
+
+        self.request.sendall(bytes(to_send, 'ascii'))
+
+class SmoketestAgent:
+    def __init__(self, agent_number):
+        self.debug = True
+        self.index = int(agent_number)
+
+        self._session = ConfigSession(os.getpid())
+        self._session.save_config(save_config)
+
+    def run(self):
+        ip_addr = test_address.format(self.index + 1)
+        self.cli_set(['firewall', 'all-ping', 'enable'])
+        self.cli_set(['interfaces', 'ethernet', test_interface, 'address', f'{ip_addr}{test_suffix}'])
+        self.cli_commit()
+
+        if self.debug:
+            print(cmd('ip addr show eth0'))
+
+        with socketserver.TCPServer((ip_addr, test_port), SmoketestAgentHandler) as server:
+            print(f'Agent listening on {ip_addr}:{test_port}')
+            server.agent = self
+            server.serve_forever()
+
+    def tear_down(self):
+        self._session.discard()
+        # ... and restore the initial state
+        self._session.migrate_and_load_config(save_config)
+
+        try:
+            self._session.commit()
+        except (ConfigError, ConfigSessionError) as err:
+            self._session.discard()
+            raise err
+
+    def cli_set(self, config):
+        if self.debug:
+            print('set ' + ' '.join(config))
+        self._session.set(config)
+
+    def cli_delete(self, config):
+        if self.debug:
+            print('del ' + ' '.join(config))
+        self._session.delete(config)
+
+    def cli_commit(self):
+        self._session.commit()
+        # during a commit there is a process opening commit_lock, and run() returns 0
+        while run(f'sudo lsof -nP {commit_lock}') == 0:
+            sleep(0.250)
+
+    def getFRRconfig(self, string, end='$', endsection='^!', daemon=''):
+        """ Retrieve current "running configuration" from FRR """
+        command = f'vtysh -c "show run {daemon} no-header" | sed -n "/^{string}{end}/,/{endsection}/p"'
+        out = cmd(command)
+        if self.debug:
+            import pprint
+            print(f'\n\ncommand "{command}" returned:\n')
+            pprint.pprint(out)
+        return out
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--agent", help="Agent number", action="store")
+    args = parser.parse_args()
+
+    if not args.agent:
+        print("ERROR: No agent number defined")
+        exit(1)
+
+    agent = SmoketestAgent(args.agent)
+    agent.run()
