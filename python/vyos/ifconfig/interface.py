@@ -1286,7 +1286,7 @@ class Interface(Control):
 
         ifname = self.ifname
         config_file = f'/run/dhcpcd/dhcpcd.{ifname}.conf'
-        systemd_service = f'dhcpcd5.dhcpcd@{ifname}.service'
+        systemd_service = f'dhcpcd@{ifname}.service'
 
         if enable and 'disable' not in self._config:
             render(config_file, 'dhcp-client/ipv6.j2', self._config)
