@@ -6,10 +6,11 @@ noup
 timeout 0
 
 {% if dhcpv6_options.duid is vyos_defined %}
-    clientid {{ dhcpv6_options.duid }}
-    duid
+clientid {{ dhcpv6_options.duid }}
+duid
 {% endif %}
 
+interface {{ ifname }}
 {% if address is vyos_defined and 'dhcpv6' in address %}
     option domain_name_servers
     option domain_name
