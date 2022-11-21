@@ -12,8 +12,8 @@ timeout 0
 {% endif %}
 
 {% if address is vyos_defined and 'dhcpv6' in address %}
-    require domain-name-servers
-    require domain-name
+    option domain_name_servers
+    option domain_name
 
 {%     if dhcpv6_options.parameters_only is vyos_defined %}
     inform6
