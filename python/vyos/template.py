@@ -640,6 +640,21 @@ def range_to_regex(num_range):
     regex = range_to_regex(num_range)
     return f'({regex})'
 
+@register_filter('pd_interface')
+def pd_interface(ifname, config, sla_len, index):
+    out = [ifname]
+
+    if 'sla_id' in config:
+        out.append(config['sla_id'])
+    else:
+        out.append(index)
+
+    out.append(sla_len)
+
+    if 'address' in config:
+        out.append(config['address'])
+
+    return "/".join(out)
 @register_test('vyos_defined')
 def vyos_defined(value, test_value=None, var_type=None):
     """

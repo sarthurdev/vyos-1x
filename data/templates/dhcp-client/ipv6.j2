@@ -30,21 +30,11 @@ noup
 {% if dhcpv6_options.pd is vyos_defined %}
 {%     for pd, pd_config in dhcpv6_options.pd.items() %}
 {%         set sla_len = 64 - pd_config.length | int %}
-{%         set ns = namespace(count=0, interfaces=[]) %}
+{%         set ns = namespace(interfaces=[]) %}
 {%         if pd_config.interface is vyos_defined %}
-{%             for interface, interface_config in pd_config.interface.items() if pd_config.interface is vyos_defined %}
-{%                 set iface = [interface] %}
-{%                 if interface_config.sla_id is vyos_defined %}
-{%                     set iface  = iface + [interface_config.sla_id] %}
-{%                 else %}
-{%                     set iface  = iface + [ns.count] %}
-{%                 endif %}
-{%                 set iface  = iface + [sla_len] %}
-{%                 if interface_config.address is vyos_defined %}
-{%                     set iface  = iface + [interface_config.address] %}
-{%                 endif %}
-{%                 set ns.count = ns.count + 1 %}
-{%                 set ns.interfaces = ns.interfaces + [iface | join("/")] %}
+{%             for interface, interface_config in pd_config.interface.items() %}
+{%                 set if_str = interface | pd_interface(interface_config, sla_len, loop.index0) %}
+{%                 set ns.interfaces = ns.interfaces + [if_str] %}
 {%             endfor %}
 {%         endif %}
     ia_pd {{ pd }}/::/{{ pd_config.length }} {{ ns.interfaces | join(" ") }}
