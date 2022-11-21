@@ -1,0 +1,17 @@
+[Unit]
+Description=DHCP Client Daemon on %I
+Wants=network.target
+Before=network.target
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+Documentation=man:dhcpcd(8)
+
+[Service]
+Type=forking
+PIDFile=/run/dhcpcd/%I.pid
+ExecStart=/usr/sbin/dhcpcd -6 -c /usr/libexec/vyos/system/vyos-dhcpcd-script.py -f /run/dhcpcd/dhcpcd.%I.conf -q -w %I
+ExecStop=/usr/sbin/dhcpcd -x %I
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
