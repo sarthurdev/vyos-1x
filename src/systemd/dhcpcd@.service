@@ -1,15 +1,13 @@
 [Unit]
 Description=DHCP Client Daemon on %I
-Wants=network.target
-Before=network.target
-BindsTo=sys-subsystem-net-devices-%i.device
-After=sys-subsystem-net-devices-%i.device
 Documentation=man:dhcpcd(8)
+ConditionPathExists=/run/dhcpcd/dhcpcd.%I.conf
+After=vyos-router.service
 
 [Service]
 Type=forking
 PIDFile=/run/dhcpcd/%I.pid
-ExecStart=/usr/sbin/dhcpcd -6 -b -c /usr/libexec/vyos/system/vyos-dhcpcd-script.py -f /run/dhcpcd/dhcpcd.%I.conf %I
+ExecStart=/usr/sbin/dhcpcd -b -6 -c /usr/libexec/vyos/system/vyos-dhcpcd-script.py -f /run/dhcpcd/dhcpcd.%I.conf -q %I
 ExecStop=/usr/sbin/dhcpcd -f /run/dhcpcd/dhcpcd.%I.conf -x %I
 Restart=on-failure
 RestartSec=20
