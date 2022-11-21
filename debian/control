@@ -49,6 +49,7 @@ Depends:
   curl,
   dbus,
   ddclient (>= 3.9.1),
+  dhcpcd5,
   dropbear,
   easy-rsa,
   etherwake,
