@@ -35,16 +35,16 @@ noup
 {%             for interface, interface_config in pd_config.interface.items() if pd_config.interface is vyos_defined %}
 {%                 set iface = [interface] %}
 {%                 if interface_config.sla_id is vyos_defined %}
-{%                     do iface.append(interface_config.sla_id) %}
+{{                     iface.append(interface_config.sla_id) }}
 {%                 else %}
-{%                     do iface.append(ns.count) %}
+{{                     iface.append(ns.count) }}
 {%                 endif %}
-{%                 do iface.append(sla_len) %}
+{{                 iface.append(sla_len) }}
 {%                 if interface_config.address is vyos_defined %}
-{%                     do iface.append(interface_config.address) %}
+{{                     iface.append(interface_config.address) }}
 {%                 endif %}
 {%                 set ns.count = ns.count + 1 %}
-{%                 do ns.interfaces.append(iface) %}
+{{                 ns.interfaces.append(iface | join("/")) }}
 {%             endfor %}
 {%         endif %}
     ia_pd {{ pd }}/::/{{ pd_config.length }} {{ ns.interfaces | join(" ") }}
