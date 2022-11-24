@@ -1,6 +1,6 @@
 <leafNode name="listen-address">
   <properties>
-    <help>Local IP addresses to listen on</help>
+    <help>Local IP address to listen on</help>
     <completionHelp>
       <script>${vyos_completion_dir}/list_local_ips.sh --both</script>
     </completionHelp>

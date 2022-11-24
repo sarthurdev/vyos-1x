@@ -1,0 +1,15 @@
+[Unit]
+Description=ntopng
+RequiresMountsFor=/run
+ConditionPathExists=/run/ntopng/ntopng.conf
+After=vyos-router.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/sbin/ntopng /run/ntopng/ntopng.conf
+Restart=on-abnormal
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

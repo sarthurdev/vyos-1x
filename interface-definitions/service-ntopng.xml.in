@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<interfaceDefinition>
+  <node name="service">
+    <children>
+      <node name="ntopng" owner="${vyos_conf_scripts_dir}/service_ntopng.py">
+        <properties>
+          <help>ntopng traffic monitor</help>
+          <priority>900</priority>
+        </properties>
+        <children>
+          <leafNode name="interface">
+            <properties>
+              <help>Interface to monitor</help>
+              <valueHelp>
+                <format>ifname</format>
+                <description>interface name</description>
+              </valueHelp>
+              <valueHelp>
+                <format>tcp://host:port</format>
+                <description>collector endpoint</description>
+              </valueHelp>
+              <completionHelp>
+                <script>${vyos_completion_dir}/list_interfaces.py</script>
+              </completionHelp>
+              <multi/>
+            </properties>
+          </leafNode>
+          #include <include/listen-address-single.xml.i>
+          #include <include/port-number.xml.i>
+          <leafNode name="port">
+            <properties>
+              <help>Local port to listen on</help>
+            </properties>
+          </leafNode>
+          <leafNode name="local-network">
+            <properties>
+              <help>Additional local networks</help>
+              <valueHelp>
+                <format>ipv4net</format>
+                <description>IPv4 Network</description>
+              </valueHelp>
+              <constraint>
+                <validator name="ipv4-prefix"/>
+              </constraint>
+              <multi/>
+            </properties>
+          </leafNode>
+          <leafNode name="dns-mode">
+            <properties>
+              <help>DNS mode</help>
+              <valueHelp>
+                <format>none</format>
+                <description>Do not decode DNS responses or resolve IP addresses</description>
+              </valueHelp>
+              <valueHelp>
+                <format>decode</format>
+                <description>Decode DNS responses only</description>
+              </valueHelp>
+              <valueHelp>
+                <format>local</format>
+                <description>Decode DNS responses and resolve local networks</description>
+              </valueHelp>
+              <valueHelp>
+                <format>all</format>
+                <description>Decode DNS responses and resolve all IP addresses</description>
+              </valueHelp>
+              <completionHelp>
+                <list>none decode local all</list>
+              </completionHelp>
+              <constraint>
+                <regex>^(none|decode|local|all)$</regex>
+              </constraint>
+            </properties>
+            <defaultValue>none</defaultValue>
+          </leafNode>
+          <leafNode name="max-flows">
+            <properties>
+              <help>Maximum number of active flows</help>
+              <valueHelp>
+                <format>u32:1-4294967295</format>
+                <description>Maximum number of active flows</description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--range 1-4294967295"/>
+              </constraint>
+            </properties>
+            <defaultValue>131072</defaultValue>
+          </leafNode>
+          <leafNode name="max-hosts">
+            <properties>
+              <help>Maximum number of active hosts</help>
+              <valueHelp>
+                <format>u32:1-4294967295</format>
+                <description>Maximum number of active hosts</description>
+              </valueHelp>
+              <constraint>
+                <validator name="numeric" argument="--range 1-4294967295"/>
+              </constraint>
+            </properties>
+            <defaultValue>131072</defaultValue>
+          </leafNode>
+        </children>
+      </node>
+    </children>
+  </node>
+</interfaceDefinition>
