@@ -164,6 +164,7 @@ Depends:
   tcptraceroute,
   telnet,
   tftpd-hpa,
+  tpm2-tools,
   traceroute,
   tuned,
   twamp-client,

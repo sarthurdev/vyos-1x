@@ -40,6 +40,8 @@ commit_lock = '/opt/vyatta/config/.lock'
 
 component_version_json = os.path.join(directories['data'], 'component-versions.json')
 
+encrypt_magic = b'VYOSENC'
+
 https_data = {
     'listen_addresses' : { '*': ['_'] }
 }

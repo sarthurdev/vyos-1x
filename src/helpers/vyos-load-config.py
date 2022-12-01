@@ -29,8 +29,14 @@ import gzip
 import tempfile
 import vyos.defaults
 import vyos.remote
+
+from cryptography.fernet import Fernet
+
 from vyos.configsource import ConfigSourceSession, VyOSError
 from vyos.migrator import Migrator, VirtualMigrator, MigratorError
+from vyos.tpm import read_tpm_key
+from vyos.util import ask_input
+from vyos.util import ask_yes_no
 
 class LoadConfig(ConfigSourceSession):
     """A subclass for calling 'loadFile'.
@@ -76,6 +82,26 @@ else:
 config = LoadConfig()
 
 print(f"Loading configuration from '{file_name}'")
+
+if config_string.startswith(vyos.defaults.encrypt_magic.decode()):
+    print('Detected encrypted config file')
+    key = None
+    if ask_yes_no('Is the encryption key stored in the TPM?'):
+        try:
+            key = read_tpm_key()
+        except:
+            print('No valid encryption key found in TPM')
+            sys.exit(1)
+    else:
+        key = ask_input('Enter encryption key:')
+
+    if not key:
+        print('Invalid encryption key, aborting.')
+        sys.exit(1)
+
+    fernet = Fernet(key)
+    magic_len = len(vyos.defaults.encrypt_magic)
+    config_string = fernet.decrypt(config_string[magic_len:].encode())
 
 with tempfile.NamedTemporaryFile() as fp:
     with open(fp.name, 'w') as fd:
