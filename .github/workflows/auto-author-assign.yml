@@ -17,6 +17,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
   # https://github.com/shufo/auto-assign-reviewer-by-files
+  # Requires PAT token for team reviewers (https://github.com/peter-evans/create-pull-request/issues/155#issuecomment-611904487)
   assign_reviewer:
     runs-on: ubuntu-latest
     steps:
