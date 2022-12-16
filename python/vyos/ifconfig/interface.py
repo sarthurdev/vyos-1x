@@ -603,8 +603,8 @@ class Interface(Control):
         >>> from vyos.ifconfig import Interface
         >>> Interface('eth0').set_tcp_ipv4_mss(1340)
         """
-        self._cleanup_mss_rules('ip mangle_mss', self.ifname)
-        nft_prefix = 'nft add rule ip mangle_mss VYOS_TCP_MSS'
+        self._cleanup_mss_rules('raw', self.ifname)
+        nft_prefix = 'nft add rule raw VYOS_TCP_MSS'
         base_cmd = f'oifname "{self.ifname}" tcp flags & (syn|rst) == syn'
         if mss == 'clamp-mss-to-pmtu':
             self._cmd(f"{nft_prefix} '{base_cmd} tcp option maxseg size set rt mtu'")
@@ -623,8 +623,8 @@ class Interface(Control):
         >>> from vyos.ifconfig import Interface
         >>> Interface('eth0').set_tcp_mss(1320)
         """
-        self._cleanup_mss_rules('ip6 mangle_mss', self.ifname)
-        nft_prefix = 'nft add rule ip6 mangle_mss VYOS_TCP_MSS'
+        self._cleanup_mss_rules('ip6 raw', self.ifname)
+        nft_prefix = 'nft add rule ip6 raw VYOS_TCP_MSS'
         base_cmd = f'oifname "{self.ifname}" tcp flags & (syn|rst) == syn'
         if mss == 'clamp-mss-to-pmtu':
             self._cmd(f"{nft_prefix} '{base_cmd} tcp option maxseg size set rt mtu'")
