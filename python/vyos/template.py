@@ -643,13 +643,14 @@ def range_to_regex(num_range):
     return f'({regex})'
 
 @register_test('vyos_defined')
-def vyos_defined(value, test_value=None, var_type=None):
+def vyos_defined(value, test_value=None, var_type=None, not_empty=None):
     """
     Jinja2 plugin to test if a variable is defined and not none - vyos_defined
     will test value if defined and is not none and return true or false.
 
     If test_value is supplied, the value must also pass == test_value to return true.
     If var_type is supplied, the value must also be of the specified class/type
+    If not_empty is supplied True, the value is of valid type (str, list, dict, tuple) and must not have zero length
 
     Examples:
     1. Test if var is defined and not none:
@@ -689,6 +690,9 @@ def vyos_defined(value, test_value=None, var_type=None):
         return False
     elif str(var_type).lower() in ['float', 'int', 'str', 'list', 'dict', 'tuple', 'bool'] and str(var_type).lower() != type(value).__name__:
         # Invalid class - return false
+        return False
+    elif not_empty and type(value).__name__ in ['str', 'list', 'dict', 'tuple'] and len(value) == 0:
+        # Valid type, zero length - return false
         return False
     else:
         # Valid value and is matching optional argument if provided - return true
