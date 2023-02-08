@@ -115,7 +115,6 @@ def nft_valid_sets():
 
 def update(firewall):
     conf_lines = []
-    count = 0
 
     valid_sets = nft_valid_sets()
 
@@ -137,7 +136,8 @@ def update(firewall):
             for table in ipv6_tables:
                 if (table, nft_set_name) in valid_sets:
                     conf_lines += nft_output(table, nft_set_name, ip6_list)
-            count += 1
+
+            print(f'domain-group {set_name} updated\n- IPv4: {ip_list}\n- IPv6: {ip6_list}')
 
     for set_name, domain in firewall['ip_fqdn'].items():
         table = 'ip vyos_filter'
@@ -147,7 +147,8 @@ def update(firewall):
 
         if (table, nft_set_name) in valid_sets:
             conf_lines += nft_output(table, nft_set_name, ip_list)
-        count += 1
+
+        print(f'FQDN {set_name} updated IPv4: {ip_list}')
 
     for set_name, domain in firewall['ip6_fqdn'].items():
         table = 'ip6 vyos_filter'
@@ -156,12 +157,13 @@ def update(firewall):
         ip_list = resolve([domain], ipv6=True)
         if (table, nft_set_name) in valid_sets:
             conf_lines += nft_output(table, nft_set_name, ip_list)
-        count += 1
+
+        print(f'FQDN {set_name} updated IPv6: {ip_list}')
 
     nft_conf_str = "\n".join(conf_lines) + "\n"
     code = run(f'nft -f -', input=nft_conf_str)
 
-    print(f'Updated {count} sets - result: {code}')
+    print(f'Finished updating sets - result code: {code}')
 
 if __name__ == '__main__':
     print(f'VyOS domain resolver')
