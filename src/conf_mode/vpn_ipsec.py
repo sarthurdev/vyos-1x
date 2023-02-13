@@ -41,6 +41,7 @@ from vyos.template import is_ipv6
 from vyos.template import render
 from vyos.validate import is_ipv6_link_local
 from vyos.util import call
+from vyos.util import cmd
 from vyos.util import dict_search
 from vyos.util import dict_search_args
 from vyos.util import run
@@ -636,7 +637,7 @@ def resync_nhrp(ipsec):
 
 def wait_for_vici_socket(timeout=5, sleep_interval=0.1):
     start_time = time()
-    test_command = f'sudo socat -u OPEN:/dev/null UNIX-CONNECT:{vici_socket}'
+    test_command = f'socat -u OPEN:/dev/null UNIX-CONNECT:{vici_socket}'
     while True:
         if (start_time + timeout) < time():
             return None
@@ -648,11 +649,11 @@ def wait_for_vici_socket(timeout=5, sleep_interval=0.1):
 def apply(ipsec):
     systemd_service = 'strongswan-starter.service'
     if not ipsec:
-        call(f'systemctl stop {systemd_service}')
+        cmd(f'systemctl stop {systemd_service}')
     else:
-        call(f'systemctl reload-or-restart {systemd_service}')
+        cmd(f'systemctl reload-or-restart {systemd_service}')
         if wait_for_vici_socket():
-            call('sudo swanctl -q')
+            cmd('swanctl -q')
 
     resync_nhrp(ipsec)
 
