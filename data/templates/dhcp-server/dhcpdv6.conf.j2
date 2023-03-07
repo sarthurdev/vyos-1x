@@ -17,6 +17,10 @@ option space cisco code width 2 length width 2;
 option cisco.tftp-servers code 1 = array of ip6-address;
 option vsio.cisco code 9 = encapsulate cisco;
 
+{% if sub_delegation is vyos_defined %}
+include "/run/dhcp-server/dhcpdv6_sd.conf";
+{% endif %}
+
 # Shared network configration(s)
 {% if shared_network_name is vyos_defined %}
 {%     for network, network_config in shared_network_name.items() if network_config.disable is not vyos_defined %}

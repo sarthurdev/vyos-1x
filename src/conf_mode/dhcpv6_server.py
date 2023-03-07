@@ -31,6 +31,7 @@ from vyos import airbag
 airbag.enable()
 
 config_file = '/run/dhcp-server/dhcpdv6.conf'
+config_file_sub_delegation = '/run/dhcp-server/dhcpdv6_sd.conf'
 
 def get_config(config=None):
     if config:
@@ -168,6 +169,7 @@ def generate(dhcpv6):
     if not dhcpv6 or 'disable' in dhcpv6:
         return None
 
+    render(config_file_sub_delegation, 'dhcp-server/dhcpdv6_sd.conf.j2', dhcpv6)
     render(config_file, 'dhcp-server/dhcpdv6.conf.j2', dhcpv6)
     return None
 

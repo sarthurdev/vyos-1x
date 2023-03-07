@@ -1,0 +1,19 @@
+# Sub-delegation
+
+{% if shared_network_name is vyos_defined and ifdata is vyos_defined %}
+{%     for name, shared_conf in shared_network_name.items() %}
+{%         if shared_conf.sub_delegation is vyos_defined %}
+{%             for ifname, sd_conf in shared_conf.sub_delegation.items() if ifname in ifdata %}
+{%                 set data = ifdata[ifname] %}
+subnet6 {{ data.subnet }} {
+{%                 if sd_conf.address_range is vyos_defined %}
+{%                     for start, range_conf in sd_conf.address_range.items() %}
+    range6 {{ data.prefix_start }}{{ start }} {{ data.prefix_end }}{{ range_conf.stop }};
+{%                     endfor %}
+{%                 endif %}
+    prefix6 {{ data.prefix_start }} {{ data.prefix_end }} /64;
+}
+{%             endfor %}
+{%         endif %}
+{%     endfor %}
+{% endif %}

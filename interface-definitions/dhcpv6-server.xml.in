@@ -62,6 +62,66 @@
                   #include <include/name-server-ipv6.xml.i>
                 </children>
               </node>
+              <tagNode name="sub-delegation">
+                <properties>
+                  <help>Sub-delegate a prefix from given interface</help>
+                  <completionHelp>
+                    <script>${vyos_completion_dir}/list_interfaces.py</script>
+                  </completionHelp>
+                  <valueHelp>
+                    <format>txt</format>
+                    <description>Interface name</description>
+                  </valueHelp>
+                  <constraint>
+                    #include <include/constraint/interface-name.xml.in>
+                  </constraint>
+                </properties>
+                <children>
+                  <leafNode name="delegation-offset">
+                    <properties>
+                      <help>Start offset relative to prefix on interface</help>
+                    </properties>
+                  </leafNode>
+                  <leafNode name="delegation-range">
+                    <properties>
+                      <help>How many ::/64 to sub-delegate</help>
+                    </properties>
+                  </leafNode>
+                  <node name="address-range">
+                    <properties>
+                      <help>Parameters setting ranges for assigning IPv6 addresses</help>
+                    </properties>
+                    <children>
+                      <tagNode name="start">
+                        <properties>
+                          <help>First address octet to assign</help>
+                          <valueHelp>
+                            <format>u32</format>
+                            <description>Start octet</description>
+                          </valueHelp>
+                          <constraint>
+                            <validator name="numeric" />
+                          </constraint>
+                        </properties>
+                        <children>
+                          <leafNode name="stop">
+                            <properties>
+                              <help>Last address octet to assign</help>
+                              <valueHelp>
+                                <format>u32</format>
+                                <description>End octet</description>
+                              </valueHelp>
+                              <constraint>
+                                <validator name="numeric" />
+                              </constraint>
+                            </properties>
+                          </leafNode>
+                        </children>
+                      </tagNode>
+                    </children>
+                  </node>
+                </children>
+              </tagNode>
               <tagNode name="subnet">
                 <properties>
                   <help>IPv6 DHCP subnet for this shared network</help>
