@@ -29,7 +29,9 @@ from ipaddress import summarize_address_range
 from netifaces import interfaces
 from secrets import SystemRandom
 from shutil import rmtree
+from time import sleep
 
+from vyos.base import Warning
 from vyos.config import Config
 from vyos.configdict import get_interface_dict
 from vyos.configdict import is_node_changed
@@ -100,8 +102,8 @@ def get_config(config=None):
 
     if is_node_changed(conf, base + [ifname, 'openvpn-option']):
         openvpn.update({'restart_required': {}})
-    if is_node_changed(conf, base + [ifname, 'enable-dco']):
-        openvpn.update({'restart_required': {}})
+    if is_node_changed(conf, base + [ifname, 'offload', 'dco']):
+        openvpn.update({'restart_required': {}, 'dco_changed': {}})
 
     # We have to get the dict using 'get_config_dict' instead of 'get_interface_dict'
     # as 'get_interface_dict' merges the defaults in, so we can not check for defaults in there.
@@ -228,6 +230,22 @@ def verify(openvpn):
 
     if 'mode' not in openvpn:
         raise ConfigError('Must specify OpenVPN operation mode!')
+
+    # DCO verify
+    if dict_search_args(openvpn, 'offload', 'dco'):
+        if openvpn['device_type'] == 'tap':
+            raise ConfigError('DCO offload is only supported with device type "tun"')
+
+        cipher = dict_search_args(openvpn, 'encryption', 'cipher')
+        if cipher and cipher not in ['aes128gcm', 'aes256gcm']:
+            raise ConfigError('DCO offload is only supported with aes128gcm or aes256gcm ciphers')
+
+        topology = dict_search_args(openvpn, 'server', 'topology')
+        if topology and topology != 'subnet':
+            raise ConfigError('DCO offload is only supported with server topology "subnet"')
+
+        if 'use_lzo_compression' in openvpn:
+            raise ConfigError('DCO offload does not support use-lzo-compression')
 
     #
     # OpenVPN client mode - VERIFY
@@ -673,11 +691,14 @@ def apply(openvpn):
     interface = openvpn['ifname']
 
     # Do some cleanup when OpenVPN is disabled/deleted
-    if 'deleted' in openvpn or 'disable' in openvpn:
+    # Stop and delete interface when DCO is toggled, device needs to be recreated
+    if 'deleted' in openvpn or 'disable' in openvpn or 'dco_changed' in openvpn:
         call(f'systemctl stop openvpn@{interface}.service')
-        for cleanup_file in glob(f'/run/openvpn/{interface}.*'):
-            if os.path.isfile(cleanup_file):
-                os.unlink(cleanup_file)
+
+        if 'dco_changed' not in openvpn:
+            for cleanup_file in glob(f'/run/openvpn/{interface}.*'):
+                if os.path.isfile(cleanup_file):
+                    os.unlink(cleanup_file)
 
         if interface in interfaces():
             VTunIf(interface).remove()

@@ -14,6 +14,7 @@
 # License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from vyos.ifconfig.interface import Interface
+from vyos.utils.dict import dict_search_args
 
 @Interface.register
 class VTunIf(Interface):
@@ -34,7 +35,10 @@ class VTunIf(Interface):
         server can be reached, thus we might need to create this interface in
         advance for the service to be operational. """
         try:
-            cmd = 'openvpn --mktun --dev-type {device_type} --dev {ifname}'.format(**self.config)
+            if dict_search_args(self.config, 'offload', 'dco'):
+                cmd = 'ip link add {ifname} type ovpn-dco'.format(**self.config)
+            else:
+                cmd = 'openvpn --mktun --dev-type {device_type} --dev {ifname}'.format(**self.config)
             return self._cmd(cmd)
         except PermissionError:
             # interface created by OpenVPN daemon in the meantime ...
