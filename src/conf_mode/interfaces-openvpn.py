@@ -728,9 +728,6 @@ def apply(openvpn):
         action = 'restart'
     call(f'systemctl {action} openvpn@{interface}.service')
 
-    o = VTunIf(**openvpn)
-    o.update(openvpn)
-
     return None
 
 
