@@ -103,7 +103,7 @@ def get_config(config=None):
     if is_node_changed(conf, base + [ifname, 'openvpn-option']):
         openvpn.update({'restart_required': {}})
     if is_node_changed(conf, base + [ifname, 'offload', 'dco']):
-        openvpn.update({'restart_required': {}})
+        openvpn.update({'restart_required': {}, 'dco_changed': {}})
 
     # We have to get the dict using 'get_config_dict' instead of 'get_interface_dict'
     # as 'get_interface_dict' merges the defaults in, so we can not check for defaults in there.
@@ -230,6 +230,22 @@ def verify(openvpn):
 
     if 'mode' not in openvpn:
         raise ConfigError('Must specify OpenVPN operation mode!')
+
+    # DCO verify
+    if dict_search_args(openvpn, 'offload', 'dco'):
+        if openvpn['device_type'] == 'tap':
+            raise ConfigError('DCO offload is only supported with device type "tun"')
+
+        cipher = dict_search_args(openvpn, 'encryption', 'cipher')
+        if cipher and cipher not in ['aes128gcm', 'aes256gcm']:
+            raise ConfigError('DCO offload is only supported with aes128gcm or aes256gcm ciphers')
+
+        topology = dict_search_args(openvpn, 'server', 'topology')
+        if topology and topology != 'subnet':
+            raise ConfigError('DCO offload is only supported with server topology "subnet"')
+
+        if 'use_lzo_compression' in openvpn:
+            raise ConfigError('DCO offload does not support use-lzo-compression')
 
     #
     # OpenVPN client mode - VERIFY
@@ -675,11 +691,17 @@ def apply(openvpn):
     interface = openvpn['ifname']
 
     # Do some cleanup when OpenVPN is disabled/deleted
-    if 'deleted' in openvpn or 'disable' in openvpn:
+    # Stop and delete interface when DCO is toggled, device needs to be recreated
+    if 'deleted' in openvpn or 'disable' in openvpn or 'dco_changed' in openvpn:
         call(f'systemctl stop openvpn@{interface}.service')
-        for cleanup_file in glob(f'/run/openvpn/{interface}.*'):
-            if os.path.isfile(cleanup_file):
-                os.unlink(cleanup_file)
+
+        if 'dco_changed' not in openvpn:
+            for cleanup_file in glob(f'/run/openvpn/{interface}.*'):
+                if os.path.isfile(cleanup_file):
+                    os.unlink(cleanup_file)
+
+        if interface in interfaces():
+            VTunIf(interface).remove()
 
     # dynamically load/unload DCO Kernel extension if requested
     dco_module = 'ovpn_dco_v2'
@@ -705,15 +727,6 @@ def apply(openvpn):
     if 'restart_required' in openvpn:
         action = 'restart'
     call(f'systemctl {action} openvpn@{interface}.service')
-
-    count = 0
-    while not interface in interfaces():
-        if count > 10:
-            Warning(f'OpenVPN did not create "{interface}" interface in a reasonable time. It may not be configured correctly.')
-            return None
-
-        count += 1
-        sleep(1)
 
     o = VTunIf(**openvpn)
     o.update(openvpn)

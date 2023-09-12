@@ -14,6 +14,7 @@
 # License along with this library.  If not, see <http://www.gnu.org/licenses/>.
 
 from vyos.ifconfig.interface import Interface
+from vyos.utils.dict import dict_search_args
 
 @Interface.register
 class VTunIf(Interface):
@@ -23,18 +24,25 @@ class VTunIf(Interface):
         **{
             'section': 'openvpn',
             'prefixes': ['vtun', ],
-            'eternal': 'vtun[0-9]+$',
             'bridgeable': True,
         },
     }
 
     def _create(self):
-        # Interface is managed by OpenVPN daemon
-        pass
-
-    def _delete(self):
-        # Interface is managed by OpenVPN daemon
-        pass
+        """ Depending on OpenVPN operation mode the interface is created
+        immediately (e.g. Server mode) or once the connection to the server is
+        established (client mode). The latter will only be brought up once the
+        server can be reached, thus we might need to create this interface in
+        advance for the service to be operational. """
+        try:
+            if dict_search_args(self.config, 'offload', 'dco'):
+                cmd = 'ip link add {ifname} type ovpn-dco'.format(**self.config)
+            else:
+                cmd = 'openvpn --mktun --dev-type {device_type} --dev {ifname}'.format(**self.config)
+            return self._cmd(cmd)
+        except PermissionError:
+            # interface created by OpenVPN daemon in the meantime ...
+            pass
 
     def add_addr(self, addr):
         # IP addresses are managed by OpenVPN daemon

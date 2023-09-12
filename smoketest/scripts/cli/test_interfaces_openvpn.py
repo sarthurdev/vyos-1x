@@ -178,6 +178,7 @@ class TestInterfacesOpenVPN(VyOSUnitTestSHIM.TestCase):
         self.cli_commit()
 
         self.assertTrue(process_named_running(PROCESS_NAME))
+        self.assertIn(interface, interfaces())
 
     def test_openvpn_client_interfaces(self):
         # Create OpenVPN client interfaces connecting to different
@@ -231,8 +232,8 @@ class TestInterfacesOpenVPN(VyOSUnitTestSHIM.TestCase):
             self.assertIn(f'key /run/openvpn/{interface}_cert.key', config)
 
             self.assertTrue(process_named_running(PROCESS_NAME))
-            # self.assertEqual(get_vrf(interface), vrf_name)
-            # self.assertIn(interface, interfaces())
+            self.assertEqual(get_vrf(interface), vrf_name)
+            self.assertIn(interface, interfaces())
 
             pw = cmd(f'sudo cat {pw_file}')
             self.assertIn(f'{interface}user', pw)
