@@ -23,6 +23,7 @@ import logging
 import signal
 import importlib.util
 import zmq
+import time
 from contextlib import contextmanager
 
 from vyos.defaults import directories
@@ -136,10 +137,21 @@ def run_script(script, config, args) -> int:
     script.argv = args
     config.set_level([])
     try:
+        time_start = round(time.time() * 1000)
         c = script.get_config(config)
+        time_get_config = round(time.time() * 1000)
         script.verify(c)
+        time_verify = round(time.time() * 1000)
         script.generate(c)
+        time_generate = round(time.time() * 1000)
         script.apply(c)
+        time_apply = round(time.time() * 1000)
+        logger.debug(f'DEBUG: run_script - {args}\n' \
+            f'get_config: {time_get_config - time_start}ms\n' \
+            f'verify: {time_verify - time_get_config}ms\n' \
+            f'generate: {time_generate - time_verify}ms\n' \
+            f'apply: {time_apply - time_generate}ms\n' \
+            f'TOTAL: {time_apply - time_start}ms')
     except ConfigError as e:
         logger.critical(e)
         explicit_print(session_out, session_mode, str(e))
