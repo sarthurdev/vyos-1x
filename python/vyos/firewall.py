@@ -19,6 +19,7 @@ import gzip
 import os
 import re
 
+from collections import defaultdict
 from pathlib import Path
 from socket import AF_INET
 from socket import AF_INET6
@@ -26,7 +27,6 @@ from socket import getaddrinfo
 from time import strftime
 
 from vyos.remote import download
-from vyos.template import is_ipv4
 from vyos.template import render
 from vyos.utils.dict import dict_search_args
 from vyos.utils.dict import dict_search_recursive
@@ -477,14 +477,15 @@ def parse_policy_set(set_conf, def_suffix):
 # GeoIP
 
 nftables_geoip_conf = '/run/nftables-geoip.conf'
+nftables_geoip_include4_conf = '/run/nftables-geoip-include4.conf'
+nftables_geoip_include6_conf = '/run/nftables-geoip-include6.conf'
+
 geoip_database = '/usr/share/vyos-geoip/dbip-country-lite.csv.gz'
 geoip_lock_file = '/run/vyos-geoip.lock'
 
 def geoip_load_data(codes=[]):
-    data = None
-
-    if not os.path.exists(geoip_database):
-        return []
+    if not os.path.exists(geoip_database) or not codes:
+        return
 
     try:
         with gzip.open(geoip_database, mode='rt') as csv_fh:
@@ -492,11 +493,9 @@ def geoip_load_data(codes=[]):
             out = []
             for start, end, code in reader:
                 if code.lower() in codes:
-                    out.append([start, end, code.lower()])
-            return out
+                    yield start, end, code.lower()
     except:
         print('Error: Failed to open GeoIP database')
-    return []
 
 def geoip_download_data():
     url = 'https://download.db-ip.com/free/dbip-country-lite-{}.csv.gz'.format(strftime("%Y-%m"))
@@ -526,7 +525,54 @@ class GeoIPLock(object):
     def __exit__(self, exc_type, exc_value, tb):
         os.unlink(self.file)
 
-def geoip_update(firewall, force=False):
+def geoip_generate(firewall):
+    ipv4_codes = defaultdict(list)
+    ipv6_codes = defaultdict(list)
+
+    # Map country codes to set names
+    if 'ipv4' in firewall:
+        for codes, path in dict_search_recursive(firewall['ipv4'], 'country_code'):
+            set_name = 'GEOIP_CC_{0}_{1}_{3}'.format(*path)
+            for code in codes:
+                ipv4_codes[code].append(set_name)
+
+    if 'ipv6' in firewall:
+        for codes, path in dict_search_recursive(firewall['ipv6'], 'country_code'):
+            set_name = 'GEOIP_CC_{0}_{1}_{3}'.format(*path)
+            for code in codes:
+                ipv6_codes[code].append(set_name)
+
+    ipv4_sets = defaultdict(list)
+    ipv6_sets = defaultdict(list)
+
+    # Iterate IP blocks to assign to sets
+    for start, end, code in geoip_load_data([*ipv4_codes, *ipv6_codes]):
+        ipv4 = '.' in start
+        if code in ipv4_codes and ipv4:
+            ip_range = f'{start}-{end}' if start != end else start
+            for setname in ipv4_codes[code]:
+                ipv4_sets[setname].append(ip_range)
+        if code in ipv6_codes and not ipv4:
+            ip_range = f'{start}-{end}' if start != end else start
+            for setname in ipv6_codes[code]:
+                ipv6_sets[setname].append(ip_range)
+
+    return ipv4_sets, ipv6_sets
+
+def geoip_update_includes(firewall):
+    if not os.path.exists(geoip_database):
+        return False
+
+    ipv4_sets, ipv6_sets = geoip_generate(firewall)
+
+    # Update includes for firewall conf script and geoip_update
+    render(nftables_geoip_include4_conf, 'firewall/nftables-geoip-include.j2', {'sets': ipv4_sets, 'ipv6': False})
+    render(nftables_geoip_include6_conf, 'firewall/nftables-geoip-include.j2', {'sets': ipv6_sets, 'ipv6': True})
+
+    # Return set names for geoip_update
+    return ipv4_sets.keys(), ipv6_sets.keys()
+
+def geoip_update(firewall):
     with GeoIPLock(geoip_lock_file) as lock:
         if not lock:
             print("Script is already running")
@@ -536,51 +582,14 @@ def geoip_update(firewall, force=False):
             print("Firewall is not configured")
             return True
 
-        if not os.path.exists(geoip_database):
-            if not geoip_download_data():
-                return False
-        elif force:
-            geoip_download_data()
+        if not geoip_download_data():
+            print("Failed to download new GeoIP database, continuing...")
 
-        ipv4_codes = {}
-        ipv6_codes = {}
-
-        ipv4_sets = {}
-        ipv6_sets = {}
-
-        # Map country codes to set names
-        for codes, path in dict_search_recursive(firewall, 'country_code'):
-            set_name = f'GEOIP_CC_{path[1]}_{path[2]}_{path[4]}'
-            if ( path[0] == 'ipv4'):
-                for code in codes:
-                    ipv4_codes.setdefault(code, []).append(set_name)
-            elif ( path[0] == 'ipv6' ):
-                set_name = f'GEOIP_CC6_{path[1]}_{path[2]}_{path[4]}'
-                for code in codes:
-                    ipv6_codes.setdefault(code, []).append(set_name)
-
-        if not ipv4_codes and not ipv6_codes:
-            if force:
-                print("GeoIP not in use by firewall")
-            return True
-
-        geoip_data = geoip_load_data([*ipv4_codes, *ipv6_codes])
-
-        # Iterate IP blocks to assign to sets
-        for start, end, code in geoip_data:
-            ipv4 = is_ipv4(start)
-            if code in ipv4_codes and ipv4:
-                ip_range = f'{start}-{end}' if start != end else start
-                for setname in ipv4_codes[code]:
-                    ipv4_sets.setdefault(setname, []).append(ip_range)
-            if code in ipv6_codes and not ipv4:
-                ip_range = f'{start}-{end}' if start != end else start
-                for setname in ipv6_codes[code]:
-                    ipv6_sets.setdefault(setname, []).append(ip_range)
+        ipv4_names, ipv6_names = geoip_update_includes(firewall)
 
         render(nftables_geoip_conf, 'firewall/nftables-geoip-update.j2', {
-            'ipv4_sets': ipv4_sets,
-            'ipv6_sets': ipv6_sets
+            'ipv4': ipv4_names,
+            'ipv6': ipv6_names
         })
 
         result = run(f'nft -f {nftables_geoip_conf}')

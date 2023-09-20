@@ -1,33 +1,21 @@
 #!/usr/sbin/nft -f
 
-{% if ipv4_sets is vyos_defined %}
-{%     for setname, ip_list in ipv4_sets.items() %}
+{% if ipv4 is vyos_defined %}
+{%     for setname in ipv4 %}
 flush set ip vyos_filter {{ setname }}
 {%     endfor %}
 
 table ip vyos_filter {
-{%     for setname, ip_list in ipv4_sets.items() %}
-    set {{ setname }} {
-        type ipv4_addr
-        flags interval
-        elements = { {{ ','.join(ip_list) }} }
-    }
-{%     endfor %}
+    include "/run/nftables-geoip-include4.conf"
 }
 {% endif %}
 
-{% if ipv6_sets is vyos_defined %}
-{%     for setname, ip_list in ipv6_sets.items() %}
+{% if ipv6 is vyos_defined %}
+{%     for setname in ipv6 %}
 flush set ip6 vyos_filter {{ setname }}
 {%     endfor %}
 
 table ip6 vyos_filter {
-{%     for setname, ip_list in ipv6_sets.items() %}
-    set {{ setname }} {
-        type ipv6_addr
-        flags interval
-        elements = { {{ ','.join(ip_list) }} }
-    }
-{%     endfor %}
+    include "/run/nftables-geoip-include6.conf"
 }
 {% endif %}

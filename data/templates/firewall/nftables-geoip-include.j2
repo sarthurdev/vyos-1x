@@ -1,0 +1,10 @@
+{% if sets is vyos_defined %}
+{%     set addr_type = 'ipv6_addr' if ipv6 else 'ipv4_addr' %}
+{%     for setname, ip_list in sets.items() %}
+    set {{ setname }} {
+        type {{ addr_type }}
+        flags interval
+        elements = { {{ ','.join(ip_list) }} }
+    }
+{%     endfor %}
+{% endif %}

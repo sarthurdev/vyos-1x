@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2021 VyOS maintainers and contributors
+# Copyright (C) 2021-2023 VyOS maintainers and contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 or later as
@@ -34,11 +34,7 @@ def get_config(config=None):
                                     no_tag_node_value_mangle=True)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--force", help="Force update", action="store_true")
-    args = parser.parse_args()
-
     firewall = get_config()
 
-    if not geoip_update(firewall, force=args.force):
+    if not geoip_update(firewall):
         sys.exit(1)

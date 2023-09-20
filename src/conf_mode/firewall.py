@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2021-2022 VyOS maintainers and contributors
+# Copyright (C) 2021-2023 VyOS maintainers and contributors
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 or later as
@@ -29,7 +29,7 @@ from vyos.configdep import set_dependents, call_dependents
 from vyos.configverify import verify_interface_exists
 from vyos.ethtool import Ethtool
 from vyos.firewall import fqdn_config_parse
-from vyos.firewall import geoip_update
+from vyos.firewall import geoip_update_includes
 from vyos.template import render
 from vyos.utils.process import call
 from vyos.utils.process import cmd
@@ -42,10 +42,9 @@ from vyos import airbag
 
 airbag.enable()
 
-nat_conf_script = 'nat.py'
-policy_route_conf_script = 'policy-route.py'
-
 nftables_conf = '/run/nftables.conf'
+nftables_geoip_include4_conf = '/run/nftables-geoip-include4.conf'
+nftables_geoip_include6_conf = '/run/nftables-geoip-include6.conf'
 
 sysfs_config = {
     'all_ping': {'sysfs': '/proc/sys/net/ipv4/icmp_echo_ignore_all', 'enable': '0', 'disable': '1'},
@@ -73,50 +72,17 @@ nested_group_types = [
     'port_group', 'ipv6_address_group', 'ipv6_network_group'
 ]
 
-snmp_change_type = {
-    'unknown': 0,
-    'add': 1,
-    'delete': 2,
-    'change': 3
-}
-snmp_event_source = 1
-snmp_trap_mib = 'VYATTA-TRAP-MIB'
-snmp_trap_name = 'mgmtEventTrap'
-
-def geoip_updated(conf, firewall):
+def geoip_changed(conf):
+    """
+    Determine if GeoIP sets need to be regenerated
+    """
     diff = get_config_diff(conf)
-    node_diff = diff.get_child_nodes_diff(['firewall'], expand_nodes=Diff.DELETE, recursive=True)
+    node_diff = diff.get_child_nodes_diff(['firewall'], expand_nodes=Diff.ADD | Diff.DELETE, recursive=True)
 
-    out = {
-        'name': [],
-        'ipv6_name': [],
-        'deleted_name': [],
-        'deleted_ipv6_name': []
-    }
-    updated = False
-
-    for key, path in dict_search_recursive(firewall, 'geoip'):
-        set_name = f'GEOIP_CC_{path[1]}_{path[2]}_{path[4]}'
-        if (path[0] == 'ipv4'):
-            out['name'].append(set_name)
-        elif (path[0] == 'ipv6'):
-            set_name = f'GEOIP_CC6_{path[1]}_{path[2]}_{path[4]}'
-            out['ipv6_name'].append(set_name)
-
-        updated = True
-
-    if 'delete' in node_diff:
-        for key, path in dict_search_recursive(node_diff['delete'], 'geoip'):
-            set_name = f'GEOIP_CC_{path[1]}_{path[2]}_{path[4]}'
-            if (path[0] == 'ipv4'):
-                out['deleted_name'].append(set_name)
-            elif (path[0] == 'ipv6'):
-                set_name = f'GEOIP_CC_{path[1]}_{path[2]}_{path[4]}'
-                out['deleted_ipv6_name'].append(set_name)
-            updated = True
-
-    if updated:
-        return out
+    for change_type in ['add', 'delete']:
+        if change_type in node_diff:
+            for key, path in dict_search_recursive(node_diff[change_type], 'geoip'):
+                return True
 
     return False
 
@@ -132,16 +98,12 @@ def get_config(config=None):
                                     get_first_key=True,
                                     with_recursive_defaults=True)
 
-
-    firewall['group_resync'] = bool('group' in firewall or node_changed(conf, base + ['group']))
-    if firewall['group_resync']:
-        # Update nat and policy-route as firewall groups were updated
+    if 'group' in firewall or node_changed(conf, base + ['group']):
         set_dependents('group_resync', conf)
 
-    firewall['geoip_updated'] = geoip_updated(conf, firewall)
+    firewall['geoip_updated'] = geoip_changed(conf)
 
     fqdn_config_parse(firewall)
-
     set_dependents('conntrack', conf)
 
     return firewall
@@ -370,6 +332,15 @@ def generate(firewall):
     if not os.path.exists(nftables_conf):
         firewall['first_install'] = True
 
+    if firewall['geoip_updated']:
+        geoip_update_includes(firewall)
+
+    if os.path.exists(nftables_geoip_include4_conf):
+        firewall['geoip4_include'] = nftables_geoip_include4_conf
+
+    if os.path.exists(nftables_geoip_include6_conf):
+        firewall['geoip6_include'] = nftables_geoip_include6_conf
+
     render(nftables_conf, 'firewall/nftables.j2', firewall)
     return None
 
@@ -408,12 +379,6 @@ def apply(firewall):
     if dict_search_args(firewall, 'group', 'domain_group') or firewall['ip_fqdn'] or firewall['ip6_fqdn']:
         domain_action = 'restart'
     call(f'systemctl {domain_action} vyos-domain-resolver.service')
-
-    if firewall['geoip_updated']:
-        # Call helper script to Update set contents
-        if 'name' in firewall['geoip_updated'] or 'ipv6_name' in firewall['geoip_updated']:
-            print('Updating GeoIP. Please wait...')
-            geoip_update(firewall)
 
     return None
 
