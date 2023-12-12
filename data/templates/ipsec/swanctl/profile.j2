@@ -1,3 +1,21 @@
+{% macro bypass_conn(tunnels) %}
+    dmvpn-bypass {
+        remote_addrs = 127.0.0.1
+        children {
+{%     for tunnel, tunnel_conf in tunnels.items() %}
+{%         if tunnel_conf.encapsulation is vyos_defined('gre') and tunnel_conf.remote is vyos_defined %}
+            tunnel-{{ tunnel }} {
+                local_ts = 0.0.0.0/0[gre]
+                remote_ts = {{ tunnel_conf.remote }}[gre]
+                mode = pass
+                start_action = trap
+            }
+{%         endif %}
+{%     endfor %}
+        }
+    }
+{% endmacro %}
+
 {% macro conn(name, profile_conf, ike_group, esp_group) %}
 {# peer needs to reference the global IKE configuration for certain values #}
 {% set ike = ike_group[profile_conf.ike_group] %}
@@ -29,6 +47,7 @@
                 local_ts = dynamic[gre]
                 remote_ts = dynamic[gre]
                 mode = {{ esp.mode }}
+                start_action = trap
 {%         if ike.dead_peer_detection.action is vyos_defined %}
                 dpd_action = {{ ike.dead_peer_detection.action }}
 {%         endif %}

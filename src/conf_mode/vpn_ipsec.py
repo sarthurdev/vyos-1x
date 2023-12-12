@@ -96,6 +96,9 @@ def get_config(config=None):
     ipsec['pki'] = conf.get_config_dict(['pki'], key_mangling=('-', '_'),
                                         no_tag_node_value_mangle=True,
                                         get_first_key=True)
+    ipsec['tunnels'] = conf.get_config_dict(['interfaces', 'tunnel'], key_mangling=('-', '_'),
+                                        no_tag_node_value_mangle=True,
+                                        get_first_key=True)
 
     tmp = conf.get_config_dict(l2tp_base, key_mangling=('-', '_'),
                                no_tag_node_value_mangle=True,

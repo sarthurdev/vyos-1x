@@ -6,6 +6,7 @@
 
 connections {
 {% if profile is vyos_defined %}
+{{ profile_tmpl.bypass_conn(tunnels) }}
 {%     for name, profile_conf in profile.items() if profile_conf.disable is not vyos_defined and profile_conf.bind.tunnel is vyos_defined %}
 {{ profile_tmpl.conn(name, profile_conf, ike_group, esp_group) }}
 {%     endfor %}
