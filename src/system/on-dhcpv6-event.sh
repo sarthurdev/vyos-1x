@@ -52,7 +52,7 @@ case "$action" in
     exit 0
     ;;
 
-  leases6_committed|lease6_rebind)
+  leases6_committed)
     for ((i = 0; i < $LEASES6_SIZE; i++)); do
       ifname=$QUERY6_IFACE_NAME
       requester_link_local=$QUERY6_REMOTE_ADDR
