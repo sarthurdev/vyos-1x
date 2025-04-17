@@ -1056,7 +1056,7 @@ class BasicInterfaceTest:
                     out = cmd('sudo nft list chain ip raw vyos_rpfilter')
                     for line in out.splitlines():
                         if line.startswith(base_options):
-                            self.assertIn('fib saddr oif 0', line)
+                            self.assertIn('ip saddr fib saddr missing', line)
                             self.assertIn('drop', line)
 
         def test_interface_ipv6_options(self):
@@ -1117,7 +1117,7 @@ class BasicInterfaceTest:
                     out = cmd('sudo nft list chain ip6 raw vyos_rpfilter')
                     for line in out.splitlines():
                         if line.startswith(base_options):
-                            self.assertIn('fib saddr . iif oif 0', line)
+                            self.assertIn('ip6 saddr . iif fib oif != iif', line)
                             self.assertIn('drop', line)
 
         def test_dhcpv6_client_options(self):

@@ -847,12 +847,14 @@ class Interface(Control):
 
         self._cleanup_ipv4_source_validation_rules(self.ifname)
         nft_prefix = f'nft insert rule ip raw vyos_rpfilter iifname "{self.ifname}"'
-        if mode in ['strict', 'loose']:
+        if mode in ['strict', 'loose', 'feasible']:
             self._cmd(f"{nft_prefix} counter return")
         if mode == 'strict':
-            self._cmd(f"{nft_prefix} fib saddr . iif oif 0 counter drop")
+            self._cmd(f"{nft_prefix} ip saddr . iif fib oif != iif drop")
         elif mode == 'loose':
-            self._cmd(f"{nft_prefix} fib saddr oif 0 counter drop")
+            self._cmd(f"{nft_prefix} ip saddr fib saddr missing drop")
+        elif mode == 'feasible':
+            self._cmd(f"{nft_prefix} meta iif != fib oif drop")
 
     def _cleanup_ipv6_source_validation_rules(self, ifname):
         results = self._cmd(f'nft -a list chain ip6 raw vyos_rpfilter').split("\n")
@@ -876,12 +878,14 @@ class Interface(Control):
 
         self._cleanup_ipv6_source_validation_rules(self.ifname)
         nft_prefix = f'nft insert rule ip6 raw vyos_rpfilter iifname "{self.ifname}"'
-        if mode in ['strict', 'loose']:
+        if mode in ['strict', 'loose', 'feasible']:
             self._cmd(f"{nft_prefix} counter return")
         if mode == 'strict':
-            self._cmd(f"{nft_prefix} fib saddr . iif oif 0 counter drop")
+            self._cmd(f"{nft_prefix} ip6 saddr . iif fib oif != iif drop")
         elif mode == 'loose':
-            self._cmd(f"{nft_prefix} fib saddr oif 0 counter drop")
+            self._cmd(f"{nft_prefix} ip6 saddr fib saddr missing drop")
+        elif mode == 'feasible':
+            self._cmd(f"{nft_prefix} meta iif != fib oif drop")
 
     def set_ipv6_accept_ra(self, accept_ra):
         """

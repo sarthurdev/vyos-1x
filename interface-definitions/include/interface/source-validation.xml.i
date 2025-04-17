@@ -3,11 +3,15 @@
   <properties>
     <help>Source validation by reversed path (RFC3704)</help>
     <completionHelp>
-      <list>strict loose disable</list>
+      <list>strict feasible loose disable</list>
     </completionHelp>
     <valueHelp>
       <format>strict</format>
       <description>Enable Strict Reverse Path Forwarding as defined in RFC3704</description>
+    </valueHelp>
+    <valueHelp>
+      <format>feasible</format>
+      <description>Enable Feasible Reverse Path Forwarding as defined in RFC3704</description>
     </valueHelp>
     <valueHelp>
       <format>loose</format>
@@ -18,7 +22,7 @@
       <description>No source validation</description>
     </valueHelp>
     <constraint>
-      <regex>(strict|loose|disable)</regex>
+      <regex>(strict|feasible|loose|disable)</regex>
     </constraint>
   </properties>
 </leafNode>

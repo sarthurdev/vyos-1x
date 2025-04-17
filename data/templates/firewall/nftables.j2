@@ -11,9 +11,11 @@ flush chain ip6 raw vyos_global_rpfilter
 table raw {
     chain vyos_global_rpfilter {
 {% if global_options.source_validation is vyos_defined('loose') %}
-        fib saddr oif 0 counter drop
+        ip saddr fib saddr missing drop
 {% elif global_options.source_validation is vyos_defined('strict') %}
-        fib saddr . iif oif 0 counter drop
+        ip saddr . iif fib oif != iif drop
+{% elif global_options.source_validation is vyos_defined('feasible') %}
+        meta iif != fib oif drop
 {% endif %}
         return
     }
@@ -22,9 +24,11 @@ table raw {
 table ip6 raw {
     chain vyos_global_rpfilter {
 {% if global_options.ipv6_source_validation is vyos_defined('loose') %}
-        fib saddr oif 0 counter drop
+        ip6 saddr fib saddr missing drop
 {% elif global_options.ipv6_source_validation is vyos_defined('strict') %}
-        fib saddr . iif oif 0 counter drop
+        ip6 saddr . iif fib oif != iif drop
+{% elif global_options.ipv6_source_validation is vyos_defined('feasible') %}
+        meta iif != fib oif drop
 {% endif %}
         return
     }

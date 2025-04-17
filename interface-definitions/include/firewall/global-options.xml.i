@@ -199,6 +199,10 @@
           <description>Enable IPv4 Strict Reverse Path Forwarding as defined in RFC3704</description>
         </valueHelp>
         <valueHelp>
+          <format>feasible</format>
+          <description>Enable IPv4 Feasible Reverse Path Forwarding as defined in RFC3704</description>
+        </valueHelp>
+        <valueHelp>
           <format>loose</format>
           <description>Enable IPv4 Loose Reverse Path Forwarding as defined in RFC3704</description>
         </valueHelp>
@@ -207,7 +211,7 @@
           <description>No IPv4 source validation</description>
         </valueHelp>
         <constraint>
-          <regex>(strict|loose|disable)</regex>
+          <regex>(strict|feasible|loose|disable)</regex>
         </constraint>
       </properties>
       <defaultValue>disable</defaultValue>
@@ -321,11 +325,15 @@
       <properties>
         <help>Policy for IPv6 source validation by reversed path, as specified in RFC3704</help>
         <completionHelp>
-          <list>strict loose disable</list>
+          <list>strict feasible loose disable</list>
         </completionHelp>
         <valueHelp>
           <format>strict</format>
           <description>Enable IPv6 Strict Reverse Path Forwarding as defined in RFC3704</description>
+        </valueHelp>
+        <valueHelp>
+          <format>feasible</format>
+          <description>Enable IPv6 Feasible Reverse Path Forwarding as defined in RFC3704</description>
         </valueHelp>
         <valueHelp>
           <format>loose</format>
@@ -336,7 +344,7 @@
           <description>No IPv6 source validation</description>
         </valueHelp>
         <constraint>
-          <regex>(strict|loose|disable)</regex>
+          <regex>(strict|feasible|loose|disable)</regex>
         </constraint>
       </properties>
       <defaultValue>disable</defaultValue>

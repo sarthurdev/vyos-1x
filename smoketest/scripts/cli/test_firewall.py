@@ -794,24 +794,24 @@ class TestFirewall(VyOSUnitTestSHIM.TestCase):
         self.cli_set(['firewall', 'global-options', 'ipv6-source-validation', 'strict'])
         self.cli_commit()
 
-        nftables_strict_search = [
-            ['fib saddr . iif oif 0', 'drop']
-        ]
-
-        self.verify_nftables_chain(nftables_strict_search, 'ip raw', 'vyos_global_rpfilter')
-        self.verify_nftables_chain(nftables_strict_search, 'ip6 raw', 'vyos_global_rpfilter')
+        self.verify_nftables_chain([['ip saddr . iif fib oif != iif', 'drop']], 'ip raw', 'vyos_global_rpfilter')
+        self.verify_nftables_chain([['ip6 saddr . iif fib oif != iif', 'drop']], 'ip6 raw', 'vyos_global_rpfilter')
 
         # Loose
         self.cli_set(['firewall', 'global-options', 'source-validation', 'loose'])
         self.cli_set(['firewall', 'global-options', 'ipv6-source-validation', 'loose'])
         self.cli_commit()
 
-        nftables_loose_search = [
-            ['fib saddr oif 0', 'drop']
-        ]
+        self.verify_nftables_chain([['ip saddr fib saddr missing', 'drop']], 'ip raw', 'vyos_global_rpfilter')
+        self.verify_nftables_chain([['ip6 saddr fib saddr missing', 'drop']], 'ip6 raw', 'vyos_global_rpfilter')
 
-        self.verify_nftables_chain(nftables_loose_search, 'ip raw', 'vyos_global_rpfilter')
-        self.verify_nftables_chain(nftables_loose_search, 'ip6 raw', 'vyos_global_rpfilter')
+        # Feasible
+        self.cli_set(['firewall', 'global-options', 'source-validation', 'feasible'])
+        self.cli_set(['firewall', 'global-options', 'ipv6-source-validation', 'feasible'])
+        self.cli_commit()
+
+        self.verify_nftables_chain([['meta iif != fib oif', 'drop']], 'ip raw', 'vyos_global_rpfilter')
+        self.verify_nftables_chain([['meta iif != fib oif', 'drop']], 'ip6 raw', 'vyos_global_rpfilter')
 
     def test_sysfs(self):
         for name, conf in sysfs_config.items():
