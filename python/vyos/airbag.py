@@ -22,6 +22,8 @@ from vyos.version import get_full_version_data
 
 
 def enable(log=True):
+    if 'nose2' in sys.modules:
+        return
     if log:
         _intercepting_logger()
     _intercepting_exceptions()
@@ -155,7 +157,7 @@ There are a few things you can do to help us (and yourself):
 {instructions}
 
 When reporting problems, please include as much information as possible:
-- do not obfuscate any data (feel free to contact us privately if your 
+- do not obfuscate any data (feel free to contact us privately if your
   business policy requires it)
 - and include all the information presented below
 
