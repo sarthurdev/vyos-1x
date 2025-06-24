@@ -187,3 +187,27 @@ def get_secure_boot_certificates(kernel: str='/boot/vmlinuz') -> list:
             subject = None
 
     return certificates
+
+LOCALE_GEN = '/etc/locale.gen'
+
+def generate_locale(locale: str):
+    """
+    Uncomments selected locale within /etc/locale.gen and triggers compilation
+    """
+    from vyos.utils.process import cmdl
+
+    prefix = f'# {locale}'
+
+    with open(LOCALE_GEN) as f:
+        lines = f.readlines()
+
+    changed = False
+    for i, line in enumerate(lines):
+        if line.startswith(prefix):
+            lines[i] = line[len('# '):]
+            changed = True
+
+    if changed:
+        with open(LOCALE_GEN, 'w') as f:
+            f.writelines(lines)
+        cmdl(['locale-gen'])

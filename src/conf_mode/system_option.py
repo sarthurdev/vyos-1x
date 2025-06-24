@@ -45,6 +45,7 @@ from vyos.utils.process import cmdl
 from vyos.utils.process import is_systemd_service_running
 from vyos.utils.network import is_addr_assigned
 from vyos.utils.network import is_intf_addr_assigned
+from vyos.utils.system import generate_locale
 from vyos.utils.system import sysctl_write
 from vyos.utils.memory import get_memory_info
 from vyos.configdep import set_dependents
@@ -686,7 +687,8 @@ def apply(options):
     # "Access denied" and would abort this script, so skip it entirely
     if 'time_format' in options and not running_as_container:
         time_format = time_format_to_locale.get(options['time_format'])
-        cmdl(['localectl', 'set-locale', f'LC_TIME={time_format}'])
+        generate_locale(time_format)
+        cmdl(['update-locale', f'LC_TIME={time_format}'])
 
     # Reload UDEV, required for USB auto suspend - a container shares the
     # host's udev(7) instance and has no systemd-udevd of its own
