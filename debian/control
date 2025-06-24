@@ -142,6 +142,7 @@ Depends:
   mokutil,
   shim-signed [amd64],
   sbsigntool,
+  e2fsprogs,
 # Image signature verification tool
   minisign,
 # Live filesystem tools
