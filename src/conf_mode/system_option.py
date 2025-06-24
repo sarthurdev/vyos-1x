@@ -686,7 +686,7 @@ def apply(options):
     # "Access denied" and would abort this script, so skip it entirely
     if 'time_format' in options and not running_as_container:
         time_format = time_format_to_locale.get(options['time_format'])
-        cmdl(['localectl', 'set-locale', f'LC_TIME={time_format}'])
+        cmdl(['update-locale', f'LC_TIME={time_format}'])
 
     # Reload UDEV, required for USB auto suspend - a container shares the
     # host's udev(7) instance and has no systemd-udevd of its own
