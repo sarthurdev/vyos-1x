@@ -461,7 +461,7 @@ def generate(container):
                 'subnets': [],
                 'ipv6_enabled': False,
                 'internal': False,
-                'dns_enabled': True,
+                'dns_enabled': False,
                 'ipam_options': {
                     'driver': 'host-local'
                 },
@@ -512,8 +512,6 @@ def apply(container):
             if os.path.exists(file_path):
                 os.unlink(file_path)
 
-    call('systemctl daemon-reload')
-
     # Delete old networks if needed
     if 'network_remove' in container:
         for network in container['network_remove']:
@@ -544,7 +542,7 @@ def apply(container):
             if 'container_restart' in container and name in container['container_restart']:
                 cmd(f'systemctl restart vyos-container-{name}.service')
 
-    if disabled_new:
+    if disabled_new or 'container_remove' in container:
         call('systemctl daemon-reload')
 
     # Start network and assign it to given VRF if requested. this can only be done
