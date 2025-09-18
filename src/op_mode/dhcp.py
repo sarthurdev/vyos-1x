@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import os
 import sys
 import typing
@@ -81,6 +82,19 @@ ArgState = typing.Literal[
 ]
 ArgOrigin = typing.Literal['local', 'remote']
 
+mac_vendor_json = '/usr/share/vyos/mac-vendors.json'
+
+def _load_mac_vendors():
+    vendor_map = {}
+    vendors = []
+
+    with open(mac_vendor_json) as f:
+        vendors = json.load(f)
+
+    for dict in vendors:
+        vendor_map[dict['macPrefix'].lower()] = dict['vendorName']
+
+    return vendor_map
 
 def _get_raw_server_leases(
     config, family='inet', vrf='', pool=None, sorted=None, state=[], origin=None
@@ -99,11 +113,13 @@ def _get_raw_server_leases(
 
 
 def _get_formatted_server_leases(raw_data, family='inet'):
+    vendor_map = _load_mac_vendors()
+
     data_entries = []
     if family == 'inet':
         for lease in raw_data:
             ipaddr = lease.get('ip')
-            hw_addr = lease.get('mac')
+            hw_addr = lease.get('mac', '')
             state = lease.get('state')
             start = datetime.fromtimestamp(lease.get('start'), timezone.utc)
             end = (
@@ -115,8 +131,10 @@ def _get_formatted_server_leases(raw_data, family='inet'):
             pool = lease.get('pool')
             hostname = lease.get('hostname')
             origin = lease.get('origin')
+            mac_vendor = vendor_map.get(hw_addr[:8].lower(), 'Unknown')
+
             data_entries.append(
-                [ipaddr, hw_addr, state, start, end, remain, pool, hostname, origin]
+                [ipaddr, hw_addr, state, start, end, remain, pool, hostname, mac_vendor, origin]
             )
 
         headers = [
@@ -128,13 +146,14 @@ def _get_formatted_server_leases(raw_data, family='inet'):
             'Remaining',
             'Pool',
             'Hostname',
+            'Vendor',
             'Origin',
         ]
 
     if family == 'inet6':
         for lease in raw_data:
             ipaddr = lease.get('ip')
-            hw_addr = lease.get('mac')
+            hw_addr = lease.get('mac', '')
             state = lease.get('state')
             start = datetime.fromtimestamp(
                 lease.get('last_communication'), timezone.utc
@@ -148,9 +167,10 @@ def _get_formatted_server_leases(raw_data, family='inet'):
             lease_type = lease.get('type')
             pool = lease.get('pool')
             hostname = lease.get('hostname')
+            mac_vendor = vendor_map.get(hw_addr[:8].lower(), 'Unknown')
             host_identifier = lease.get('duid')
             data_entries.append(
-                [ipaddr, hw_addr, state, start, end, remain, pool, hostname, lease_type, host_identifier]
+                [ipaddr, hw_addr, state, start, end, remain, pool, hostname, mac_vendor, lease_type, host_identifier]
             )
 
         headers = [
@@ -162,6 +182,7 @@ def _get_formatted_server_leases(raw_data, family='inet'):
             'Remaining',
             'Pool',
             'Hostname',
+            'Vendor',
             'Type',
             'DUID',
         ]
