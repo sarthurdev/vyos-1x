@@ -171,6 +171,27 @@
             <valueless/>
           </properties>
         </leafNode>
+        <leafNode name="update-interval">
+          <properties>
+            <help>Interval for automatic GeoIP database updates</help>
+            <valueHelp>
+              <format>monthly</format>
+              <description>Update GeoIP database monthly</description>
+            </valueHelp>
+            <valueHelp>
+              <format>weekly</format>
+              <description>Update GeoIP database weekly</description>
+            </valueHelp>
+            <valueHelp>
+              <format>none</format>
+              <description>Do not automatically update GeoIP database</description>
+            </valueHelp>
+            <constraint>
+              <regex>(monthly|weekly|none)</regex>
+            </constraint>
+          </properties>
+          <defaultValue>weekly</defaultValue>
+        </leafNode>
       </children>
     </node>
     <leafNode name="ip-src-route">

@@ -50,6 +50,7 @@ domain_resolver_usage = '/run/use-vyos-domain-resolver-firewall'
 firewall_config_dir = "/config/firewall"
 
 sysctl_file = r'/run/sysctl/10-vyos-firewall.conf'
+geoip_crontab_file = '/etc/cron.d/vyos-geoip'
 
 valid_groups = [
     'address_group',
@@ -641,6 +642,13 @@ def verify(firewall):
 def generate(firewall):
     render(nftables_conf, 'firewall/nftables.j2', firewall)
     render(sysctl_file, 'firewall/sysctl-firewall.conf.j2', firewall)
+
+    geoip_cron_interval = dict_search_args(firewall, 'global_options', 'geoip', 'update_interval')
+    if geoip_cron_interval in ['monthly', 'weekly']:
+        render(geoip_crontab_file, 'firewall/geoip-update.j2', {'interval': geoip_cron_interval})
+    elif os.path.exists(geoip_crontab_file):
+        # update_interval is none, remove crontab
+        os.unlink(geoip_crontab_file)
 
     # Cleanup remote-group cache files
     if os.path.exists(firewall_config_dir):

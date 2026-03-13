@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import unittest
 
 from glob import glob
@@ -103,6 +104,20 @@ class TestFirewall(VyOSUnitTestSHIM.TestCase):
 
         # -t prevents 1000+ GeoIP elements being returned
         self.verify_nftables(nftables_search, 'ip vyos_filter', args='-t')
+
+    def test_geoip_crontab(self):
+        geoip_crontab_file = '/etc/cron.d/vyos-geoip'
+        interval_default = '@weekly'
+
+        # Verify node default value
+        self.assertTrue(os.path.exists(geoip_crontab_file))
+        self.assertIn(interval_default, read_file(geoip_crontab_file))
+
+        self.cli_set(['firewall', 'global-options', 'geoip', 'update-interval', 'none'])
+        self.cli_commit()
+
+        # Verify crontab is removed
+        self.assertFalse(os.path.exists(geoip_crontab_file))
 
     def test_groups(self):
         hostmap_path = ['system', 'static-host-mapping', 'host-name']
