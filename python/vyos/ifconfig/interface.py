@@ -1794,6 +1794,9 @@ class Interface(Control):
                     )
                     continue
 
+                handle = ''
+                parent = ''
+
                 if direction == 'ingress':
                     handle = 'ffff: ingress'
                     parent = 'ffff:'

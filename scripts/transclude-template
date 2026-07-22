@@ -27,7 +27,7 @@ import glob
 
 regexp = re.compile(r'^ *#include <(.+)>$')
 
-def parse_file(filename):
+def parse_file(directory, filename):
     lines = ""
     with open(filename, 'r') as f:
         while True:
@@ -37,7 +37,7 @@ def parse_file(filename):
                 if result:
                     res = os.path.join(directory, result.group(1))
                     for g in sorted(glob.glob(res)):
-                        lines += parse_file(g)
+                        lines += parse_file(directory, g)
                 else:
                     lines += line
             else:
@@ -49,5 +49,4 @@ if __name__ == '__main__':
         sys.exit(1)
     filename = sys.argv[1]
     directory = os.path.dirname(os.path.abspath(filename))
-    print(parse_file(filename))
-
+    print(parse_file(directory, filename))

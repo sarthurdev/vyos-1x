@@ -72,7 +72,8 @@ class DynamicClassBase(unittest.TestCase):
     def tearDown(self):
         self.session.migrate_and_load_config(save_config)
         self.session.commit()
-        log.info(f" time: {time.time() - self._start_time:.3f}")
+        # Below line commented as `log` not in scope
+        # log.info(f" time: {time.time() - self._start_time:.3f}")
         del self.session
         try:
             os.remove(save_config)

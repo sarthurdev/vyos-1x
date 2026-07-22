@@ -31,7 +31,7 @@ config_file = '/etc/cloud/cloud.cfg.d/20_vyos_network.cfg'
 template_file = 'system/cloud_init_networking.j2'
 
 
-def check_interface_dhcp(iface_name: str) -> bool:
+def check_interface_dhcp(logger: logging.Logger, iface_name: str) -> bool:
     """Check DHCP client can work on an interface
 
     Args:
@@ -62,7 +62,7 @@ def check_interface_dhcp(iface_name: str) -> bool:
     return check_result
 
 
-def dhclient_cleanup() -> None:
+def dhclient_cleanup(logger: logging.Logger) -> None:
     """Clean up after dhclients
     """
     run(['killall', 'dhclient'])
@@ -71,7 +71,7 @@ def dhclient_cleanup() -> None:
     logger.debug('cleaned up after dhclients')
 
 
-def dict_interfaces() -> dict[str, str]:
+def dict_interfaces(logger: logging.Logger) -> dict[str, str]:
     """Return list of available network interfaces except loopback
 
     Returns:
@@ -93,7 +93,7 @@ def dict_interfaces() -> dict[str, str]:
     return interfaces_dict
 
 
-def need_to_check() -> bool:
+def need_to_check(logger: logging.Logger) -> bool:
     """Check if we need to perform DHCP checks
 
     Returns:
@@ -139,23 +139,23 @@ if __name__ == '__main__':
     logger.info('udev finished its work, we continue')
 
     # do not perform any checks if this is not required
-    if not need_to_check():
+    if not need_to_check(logger):
         exit()
 
     # get list of interfaces and check them
     interfaces_dhcp: list[dict[str, str]] = []
-    interfaces_dict: dict[str, str] = dict_interfaces()
+    interfaces_dict: dict[str, str] = dict_interfaces(logger)
 
     with ProcessPoolExecutor(max_workers=len(interfaces_dict)) as executor:
         iface_check_results = [{
-            'dhcp': executor.submit(check_interface_dhcp, iface_name),
+            'dhcp': executor.submit(check_interface_dhcp, logger, iface_name),
             'append': {
                 'name': iface_name,
                 'mac': iface_mac
             }
         } for iface_name, iface_mac in interfaces_dict.items()]
 
-    dhclient_cleanup()
+    dhclient_cleanup(logger)
 
     for iface_check_result in iface_check_results:
         if iface_check_result.get('dhcp').result():

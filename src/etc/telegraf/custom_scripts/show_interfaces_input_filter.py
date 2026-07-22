@@ -43,6 +43,7 @@ def get_interface_admin_state(iface):
     up => 0, down => 2
     """
     state = Interface(iface).get_admin_state()
+    admin_state = None
     if state == 'up':
         admin_state = 0
     if state == 'down':
@@ -56,6 +57,7 @@ def get_interface_oper_state(iface):
     up => 0, down => 1
     """
     state = Interface(iface).operational.get_state()
+    oper_state = None
     if state == 'down':
         oper_state = 1
     else:

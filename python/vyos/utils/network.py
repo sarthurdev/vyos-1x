@@ -167,6 +167,7 @@ def get_interface_vrf(interface):
     """ Returns VRF of given interface """
     from vyos.utils.dict import dict_search
     from vyos.utils.network import get_interface_config
+    tmp = None
     if isinstance(interface, str):
         tmp = get_interface_config(interface)
     elif isinstance(interface, dict):

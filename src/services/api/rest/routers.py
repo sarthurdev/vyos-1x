@@ -795,6 +795,7 @@ def image_op(data: ImageModel):
     session = state.session
 
     op = data.op
+    res = None
 
     try:
         if op == 'add':

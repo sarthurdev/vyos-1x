@@ -16,7 +16,7 @@ parser.add_argument(
 )
 
 
-def notify(interval, reboot=False):
+def notify(interval, minutes, reboot=False):
     s = '' if interval == 1 else 's'
     time.sleep((minutes - interval) * 60)
     if reboot:
@@ -52,6 +52,6 @@ if __name__ == '__main__':
         intervals.remove(minutes)
     for interval in sorted(intervals, reverse=True):
         if minutes >= interval:
-            notify(interval, reboot=reboot)
+            notify(interval, minutes, reboot=reboot)
             minutes -= minutes - interval
     exit(0)

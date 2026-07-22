@@ -49,6 +49,7 @@ def post_request(
     data: str,
     params: Dict[str, Any],
     headers: Dict[str, str],
+    timeout: int
 ) -> requests.Response:
     """Sends a POST request to the specified URL
 
@@ -119,7 +120,8 @@ def set_remote_config(
         op: str,
         mask: Dict[str, Any],
         config: Dict[str, Any],
-        port: int) -> Optional[Dict[str, Any]]:
+        port: int,
+        timeout: int) -> Optional[Dict[str, Any]]:
     """Loads the VyOS configuration in JSON format to a remote host.
 
     Args:
@@ -153,7 +155,7 @@ def set_remote_config(
     })
 
     try:
-        config = post_request(url, data, params, headers)
+        config = post_request(url, data, params, headers, timeout)
         return config.json()
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
@@ -173,6 +175,7 @@ def config_sync(
     mode: str,
     secondary_port: int,
     exclusions: List[list[str]],
+    timeout: int
 ):
     """Retrieve a config section from primary router in JSON format and send it to
        secondary router
@@ -196,7 +199,8 @@ def config_sync(
                                    op=mode,
                                    mask=mask_dict,
                                    config=config_dict,
-                                   port=secondary_port)
+                                   port=secondary_port,
+                                   timeout=timeout)
 
     logger.debug(f"Set config for sections '{sections}': {set_config}")
 
@@ -255,4 +259,5 @@ if __name__ == '__main__':
         mode,
         secondary_port,
         exclude_list,
+        timeout
     )

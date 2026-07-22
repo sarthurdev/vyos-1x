@@ -63,6 +63,8 @@ def display_otp_ocserv(username, params, info):
     otp_length = params['otp']['otp_length']
     interval = params['otp']['interval']
     token_type = params['otp']['token_type']
+    token_type_acrn = ''
+    otp_param = ''
     if token_type == 'hotp-time':
         token_type_acrn = 'totp'
         otp_param = f'&period={interval}'
