@@ -228,7 +228,7 @@ def main():
     ipr = IPRoute()
     try:
         # newer pyroute2 versions support bind group in IPRoute() constructor
-        ipr.bind(groups=RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR)
+        ipr.bind(groups=RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR) # pylint: disable=unexpected-keyword-arg
         syslog.syslog(syslog.LOG_INFO,
             'IPRoute.bind() using link and address RTNL subscriptions')
     except TypeError:
@@ -297,7 +297,7 @@ def main():
 
                 if not ifname and 'index' in message:
                     try:
-                        links = ipr.get_links(message['index'])
+                        links = ipr.get_links(message['index']) # pylint: disable=too-many-function-args
                         if links:
                             ifname = dict(links[0].get('attrs', [])).get('IFLA_IFNAME', None)
                     except NetlinkError:

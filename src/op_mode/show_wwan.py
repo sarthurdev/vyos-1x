@@ -37,7 +37,7 @@ required.add_argument("--interface", help="WWAN interface name, e.g. wwan0", req
 def qmi_cmd(device, command, silent=False):
     try:
         tmp = cmdl(['qmicli', f'--device={device}', '--device-open-proxy'] + command.split())
-        tmp = tmp.replace(f'[{cdc}] ', '')
+        tmp = tmp.replace(f'[{device}] ', '')
         if not silent:
             # skip first line as this only holds the info headline
             for line in tmp.splitlines()[1:]:
