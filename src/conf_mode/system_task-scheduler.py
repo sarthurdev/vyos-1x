@@ -86,7 +86,7 @@ def verify(tasks):
         if task["interval"]:
             if task["spec"]:
                 raise ConfigError("Invalid task {0}: cannot use interval and crontab-spec at the same time".format(task["name"]))
- 
+
             if not re.match(r"^\d+[mdh]?$", task["interval"]):
                 raise(ConfigError("Invalid interval {0} in task {1}: interval should be a number optionally followed by m, h, or d".format(task["name"], task["interval"])))
             else:
@@ -125,6 +125,7 @@ def generate(tasks):
                 line = format_task(command=command, rawspec=task["spec"])
             else:
                 value, suffix = split_interval(task["interval"])
+                line = ''
                 if not suffix or suffix == "m":
                     line = format_task(command=command, minute="*/{0}".format(value))
                 elif suffix == "h":

@@ -136,7 +136,7 @@ def show_interfaces(interfaces_list: list) -> str:
     return tabulate(table, headers=headers, tablefmt='simple')
 
 
-def show_interfaces_dataplane(interfaces_list: list, filter_type: str = 'all') -> str:
+def show_interfaces_dataplane(vpp: VPPControl, interfaces_list: list, filter_type: str = 'all') -> str:
     table = []
     interface_dp_filter = ('tun', 'tap')
     lcp_pair_list = vpp.lcp_pairs_list()
@@ -238,14 +238,14 @@ if __name__ == '__main__':
     dp_ifaces_list = vpp_ifaces_list(vpp.api)
 
     if args.summary:
-        print(show_interfaces_dataplane(dp_ifaces_list, filter_type='all'))
+        print(show_interfaces_dataplane(vpp, dp_ifaces_list, filter_type='all'))
 
     if args.dataplane:
-        print(show_interfaces_dataplane(dp_ifaces_list, filter_type='no_tun_tap'))
+        print(show_interfaces_dataplane(vpp, dp_ifaces_list, filter_type='no_tun_tap'))
         exit(0)
 
     if args.kernel:
-        print(show_interfaces_dataplane(dp_ifaces_list, filter_type='only_tun_tap'))
+        print(show_interfaces_dataplane(vpp, dp_ifaces_list, filter_type='only_tun_tap'))
 
     if args.iproute:
         vpp_interfaces = []

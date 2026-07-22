@@ -65,6 +65,8 @@ class MACsecInterfaceTest(BasicInterfaceTest.TestCase):
         replay_window = '64'
 
         for interface, option_value in self._options.items():
+            src_interface = None
+
             for option in option_value:
                 if option.split()[0] == 'source-interface':
                     src_interface = option.split()[1]
@@ -175,6 +177,7 @@ class MACsecInterfaceTest(BasicInterfaceTest.TestCase):
         base_bond = ['interfaces', 'bonding', 'bond200']
 
         for interface, option_value in self._options.items():
+            src_interface = None
             for option in option_value:
                 self.cli_set(self._base_path + [interface] + option.split())
                 if option.split()[0] == 'source-interface':
