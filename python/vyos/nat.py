@@ -142,6 +142,7 @@ def parse_nat_rule(rule_conf, rule_id, nat_type, ipv6=False):
                 translation_str += ' numgen random mod 100 map ' + '{ ' + f'{elements}' + ' }'
             else:
                 for input_param in rule_conf['load_balance']['hash']:
+                    param = ''
                     if input_param == 'source-address':
                         param = 'ip saddr'
                     elif input_param == 'destination-address':
