@@ -309,3 +309,8 @@ fi
 # so that it can have the prigilege to run commands as root.
 # Permissions will be enforced at the VyOS command level.
 chmod u+s /usr/bin/vyos-op-run
+
+# T7557: Mask unnecessary systemd generators
+mkdir -p /etc/systemd/system-generators
+ln -s /dev/null /etc/systemd/system-generators/systemd-ssh-generator
+ln -s /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
