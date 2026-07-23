@@ -289,6 +289,7 @@ Depends:
 # End "high-availability-vrrp"
 # For "system console"
   util-linux,
+  util-linux-extra,
 # End "system console"
 # For "system task-scheduler"
   cron,
