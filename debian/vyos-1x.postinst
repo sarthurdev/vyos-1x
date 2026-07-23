@@ -304,3 +304,8 @@ systemctl enable vyos-dhclient-lease-watch.timer
 if [ -d /run/systemd/system ]; then
     systemctl start vyos-dhclient-lease-watch.timer
 fi
+
+# T7557: Mask unnecessary systemd generators
+mkdir -p /etc/systemd/system-generators
+ln -s /dev/null /etc/systemd/system-generators/systemd-ssh-generator
+ln -s /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
