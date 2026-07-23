@@ -51,7 +51,7 @@ TMPL_GRUB_OPTS: str = 'grub/grub_options.j2'
 TMPL_GRUB_COMMON: str = 'grub/grub_common.j2'
 
 # default boot options
-BOOT_OPTS_STEM: str = 'boot=live rootdelay=5 noautologin net.ifnames=0 biosdevname=0 vyos-union=/boot/'
+BOOT_OPTS_STEM: str = 'boot=live rootdelay=5 noautologin net.ifnames=0 biosdevname=0 systemd.ssh_auto=no vyos-union=/boot/'
 
 # prepare regexes
 REGEX_GRUB_VARS: str = r'^set (?P<variable_name>\w+)=[\'"]?(?P<variable_value>.*)(?<![\'"])[\'"]?$'
