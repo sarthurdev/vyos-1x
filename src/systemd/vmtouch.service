@@ -1,0 +1,13 @@
+[Unit]
+Description=Vmtouch - Virtual Memory Toucher
+Documentation=man:vmtouch(8)
+After=network.target local-fs.target
+
+[Service]
+Type=exec
+EnvironmentFile=-/etc/default/vmtouch
+ExecStart=/usr/bin/vmtouch -P /run/vmtouch.pid $VMTOUCH_OPTIONS $VMTOUCH_FILES
+PIDFile=/run/vmtouch.pid
+
+[Install]
+WantedBy=multi-user.target
