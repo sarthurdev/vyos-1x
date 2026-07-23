@@ -298,3 +298,7 @@ fi
 if systemctl is-active --quiet vyos-netlinkd; then
     systemctl restart vyos-netlinkd
 fi
+
+# T7557: Mask unnecessary systemd generators
+ln -s /dev/null /etc/systemd/system-generators/systemd-ssh-generator
+ln -s /dev/null /etc/systemd/system-generators/systemd-gpt-auto-generator
