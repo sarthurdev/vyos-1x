@@ -226,10 +226,14 @@ service {
     ssh {
         ciphers aes128-ctr,aes192-ctr,aes256-ctr
         ciphers chacha20-poly1305@openssh.com,rijndael-cbc@lysator.liu.se
+        hostkey-algorithm ssh-rsa
+        hostkey-algorithm ssh-dss
         listen-address 192.168.0.1
         key-exchange curve25519-sha256@libssh.org
         key-exchange diffie-hellman-group1-sha1,diffie-hellman-group-exchange-sha1,diffie-hellman-group-exchange-sha256
         port 22
+        pubkey-accepted-algorithm ssh-rsa
+        pubkey-accepted-algorithm ssh-dss
     }
 }
 system {
