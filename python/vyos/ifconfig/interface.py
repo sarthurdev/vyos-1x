@@ -745,7 +745,7 @@ class Interface(Control):
         results = self._cmdl(['nft', '-a', 'list', 'chain'] + table + ['VYOS_TCP_MSS']).split("\n")
         for line in results:
             if f'oifname "{ifname}"' in line:
-                handle_search = re.search('handle (\d+)', line)
+                handle_search = re.search(r'handle (\d+)', line)
                 if handle_search:
                     self._cmdl(['nft', 'delete', 'rule'] + table + ['VYOS_TCP_MSS', 'handle', handle_search[1]])
 

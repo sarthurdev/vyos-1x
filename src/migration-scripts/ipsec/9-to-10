@@ -97,7 +97,7 @@ def migrate(config: ConfigTree) -> None:
             #   peer 192.0.2.1   => peer peer_192-0-2-1
             #   peer 2001:db8::2 => peer peer_2001-db8--2
             #   peer @foo        => peer peer_foo
-            re_peer_name = re.sub(':|\.', '-', peer)
+            re_peer_name = re.sub(r':|\.', '-', peer)
             if re_peer_name.startswith('@'):
                 re_peer_name = re.sub('@', '', re_peer_name)
             new_peer_name = f'peer_{re_peer_name}'

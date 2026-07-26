@@ -77,4 +77,3 @@ if __name__ == '__main__':
     except (ValueError, vyos.opmode.Error) as e:
         print(e)
         sys.exit(1)
-

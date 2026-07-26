@@ -101,7 +101,7 @@ def migrate(config: ConfigTree) -> None:
                 config.copy(new_base_path + [address, 'use-web'], new_base_path + ['web', 'web-options'])
                 if config.exists(new_base_path + ['web', 'web-options', 'url']):
                     url = config.return_value(new_base_path + ['web', 'web-options', 'url'])
-                    if re.search("^(https?://)?checkip\.dyndns\.org", url):
+                    if re.search(r"^(https?://)?checkip\.dyndns\.org", url):
                         config.set(new_base_path + ['web', 'web-options', 'url'], 'https://domains.google.com/checkip')
                     if not url.startswith(('http://', 'https://')):
                         config.set(new_base_path + ['web', 'web-options', 'url'], f'https://{url}')

@@ -118,7 +118,7 @@ GhUb5YIISNnZnZZeUD/Z0IJXJryjk9eUbhDCgEZRVzeT
 
 def get_config_value(key):
     tmp = read_file(STUNNEL_CONF)
-    tmp = re.findall(f'\n?{key}\s+(.*)', tmp)
+    tmp = re.findall(rf'\n?{key}\s+(.*)', tmp)
     return tmp
 
 

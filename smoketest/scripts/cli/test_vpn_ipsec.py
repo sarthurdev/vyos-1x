@@ -49,7 +49,7 @@ ike_group = 'MyIKEGroup'
 secret = 'MYSECRETKEY'
 ppk_secret_hex = '55c2ebca1bada7ac0e4e1390a8dbb563cefea0c7bd59f4f2c86a627f5927fb90'
 PROCESS_NAME = 'charon-systemd'
-regex_uuid4 = '[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}'
+regex_uuid4 = r'[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}'
 
 ca_name = 'MyVyOS-CA'
 ca_pem = """
@@ -113,7 +113,7 @@ CA_PATH     = f'{swanctl_dir}/x509ca/'
 
 def get_config_value(file, key):
     tmp = read_file(file)
-    tmp = re.findall(f'\n?{key}\s+(.*)', tmp)
+    tmp = re.findall(rf'\n?{key}\s+(.*)', tmp)
     return tmp
 
 class TestVPNIPsec(VyOSUnitTestSHIM.TestCase):
