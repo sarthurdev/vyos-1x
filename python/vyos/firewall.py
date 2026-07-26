@@ -87,7 +87,7 @@ def find_nftables_rule(table, chain, rule_matches=[]):
     results = cmdl(['nft', '--handle', 'list', 'chain', table, chain], sudo=True).split("\n")
     for line in results:
         if all(rule_match in line for rule_match in rule_matches):
-            handle_search = re.search('handle (\d+)', line)
+            handle_search = re.search(r'handle (\d+)', line)
             if handle_search:
                 return handle_search[1]
     return None
