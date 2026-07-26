@@ -564,7 +564,7 @@ def verify(ipsec):
         for peer, peer_conf in ipsec['site_to_site']['peer'].items():
             has_default_esp = False
             # Peer name it is swanctl connection name and shouldn't contain dots or colons, T4118
-            if bool(re.search(':|\.', peer)):
+            if bool(re.search(r':|\.', peer)):
                 raise ConfigError(f'Incorrect peer name "{peer}" '
                                   f'Peer name can contain alpha-numeric letters, hyphen and underscore')
 

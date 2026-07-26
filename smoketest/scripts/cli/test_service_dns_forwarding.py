@@ -212,7 +212,7 @@ class TestServicePowerDNS(VyOSUnitTestSHIM.TestCase):
         hosts_conf = read_file(HOSTSD_FILE)
         for domain in domains:
             # Test 'recursion-desired' flag for the first domain only
-            if domain == domains[0]: key =f'\+{domain}'
+            if domain == domains[0]: key = rf'\+{domain}'
             else: key =f'{domain}'
             tmp = get_config_value(key, file=FORWARD_FILE)
             canonical_entries = [(lambda h, p: f"{bracketize_ipv6(h)}:{p['port'] if 'port' in p else 53}")(h, p)

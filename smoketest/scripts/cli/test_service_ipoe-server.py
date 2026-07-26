@@ -108,7 +108,7 @@ class TestServiceIPoEServer(BasicAccelPPPTest.TestCase):
 
         # check local users
         tmp = cmdl(['cat', self._chap_secrets], sudo=True)
-        regex = f"{interface}\s+\*\s+{mac_address}\s+\*"
+        regex = rf"{interface}\s+\*\s+{mac_address}\s+\*"
         tmp = re.findall(regex, tmp)
         self.assertTrue(tmp)
 
@@ -257,7 +257,7 @@ delegate={delegate_2_prefix},{delegate_mask},name={pool_name}"""
         conf = ConfigParser(allow_no_value=True, delimiters='=', strict=False)
         conf.read(self._config_file)
         tmp = range_to_regex(vlans)
-        self.assertIn(f're:^{interface}\.{tmp}$', conf['ipoe']['interface'])
+        self.assertIn(rf're:^{interface}\.{tmp}$', conf['ipoe']['interface'])
 
         tmp = ','.join(vlans)
         self.assertIn(f'{interface},{tmp}', conf['ipoe']['vlan-mon'])
@@ -293,7 +293,7 @@ delegate={delegate_2_prefix},{delegate_mask},name={pool_name}"""
 
         # check local users
         tmp = cmdl(['cat', self._chap_secrets], sudo=True)
-        regex = f'{interface}\s+\*\s+{mac_address}\s+{ip_address}'
+        regex = rf'{interface}\s+\*\s+{mac_address}\s+{ip_address}'
         tmp = re.findall(regex, tmp)
         self.assertTrue(tmp)
 

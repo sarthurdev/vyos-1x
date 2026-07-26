@@ -49,10 +49,8 @@ def bounded_regex_for_range(min_, max_):
     return r'\b({})\b'.format(regex_for_range(min_, max_))
 
 def regex_for_range(min_, max_):
-    """
-    > regex_for_range(12, 345)
-    '1[2-9]|[2-9]\d|[1-2]\d{2}|3[0-3]\d|34[0-5]'
-    """
+    # regex_for_range(12, 345)
+    #'1[2-9]|[2-9]\d|[1-2]\d{2}|3[0-3]\d|34[0-5]'
     positive_subpatterns = []
     negative_subpatterns = []
 

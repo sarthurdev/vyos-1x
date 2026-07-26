@@ -43,7 +43,7 @@ test_command = 'uname -a'
 
 def get_config_value(key):
     tmp = read_file(SSHD_CONF)
-    tmp = re.findall(f'\n?{key}\s+(.*)', tmp)
+    tmp = re.findall(rf'\n?{key}\s+(.*)', tmp)
     return tmp
 
 trusted_user_ca_path = base_path + ['trusted-user-ca']

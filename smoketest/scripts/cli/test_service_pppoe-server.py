@@ -152,7 +152,7 @@ class TestServicePPPoEServer(BasicAccelPPPTest.TestCase):
         config = read_file(self._config_file)
         for vlan in vlans:
             tmp = range_to_regex(vlan)
-            self.assertIn(f'interface=re:^{interface}\.{tmp}$', config)
+            self.assertIn(rf'interface=re:^{interface}\.{tmp}$', config)
 
         tmp = ','.join(vlans)
         self.assertIn(f'vlan-mon={interface},{tmp}', config)

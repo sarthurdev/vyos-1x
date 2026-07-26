@@ -709,7 +709,7 @@ class Interface(Control):
         results = self._cmdl(['nft', '-a', 'list', 'chain'] + table + ['VYOS_TCP_MSS']).split("\n")
         for line in results:
             if f'oifname "{ifname}"' in line:
-                handle_search = re.search('handle (\d+)', line)
+                handle_search = re.search(r'handle (\d+)', line)
                 if handle_search:
                     self._cmdl(['nft', 'delete', 'rule'] + table + ['VYOS_TCP_MSS', 'handle', handle_search[1]])
 
@@ -862,7 +862,7 @@ class Interface(Control):
         results = self._cmdl(['nft', '-a', 'list', 'chain', 'ip', 'raw', 'vyos_rpfilter']).split("\n")
         for line in results:
             if f'iifname "{ifname}"' in line:
-                handle_search = re.search('handle (\d+)', line)
+                handle_search = re.search(r'handle (\d+)', line)
                 if handle_search:
                     self._cmdl(['nft', 'delete', 'rule', 'ip', 'raw', 'vyos_rpfilter', 'handle', handle_search[1]])
 
@@ -892,7 +892,7 @@ class Interface(Control):
         results = self._cmdl(['nft', '-a', 'list', 'chain', 'ip6', 'raw', 'vyos_rpfilter']).split("\n")
         for line in results:
             if f'iifname "{ifname}"' in line:
-                handle_search = re.search('handle (\d+)', line)
+                handle_search = re.search(r'handle (\d+)', line)
                 if handle_search:
                     self._cmdl(['nft', 'delete', 'rule', 'ip6', 'raw', 'vyos_rpfilter', 'handle', handle_search[1]])
 

@@ -438,7 +438,7 @@ def verify_diffie_hellman_length(file, min_keysize):
 
     if os.path.exists(file):
         out = cmdl(['openssl', 'dhparam', '-inform', 'PEM', '-in', file, '-text'])
-        prog = re.compile('\d+\s+bit')
+        prog = re.compile(r'\d+\s+bit')
         if prog.search(out):
             bits = prog.search(out)[0].split()[0]
             if int(bits) >= int(min_keysize):
