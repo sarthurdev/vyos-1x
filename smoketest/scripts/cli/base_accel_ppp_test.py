@@ -251,7 +251,7 @@ class BasicAccelPPPTest:
 
             # check local users
             tmp = cmdl(['cat', self._chap_secrets], sudo=True)
-            regex = f"{user}\s+\*\s+{password}\s+{static_ip}\s+{download}/{upload}"
+            regex = rf"{user}\s+\*\s+{password}\s+{static_ip}\s+{download}/{upload}"
             tmp = re.findall(regex, tmp)
             self.assertTrue(tmp)
 
@@ -264,7 +264,7 @@ class BasicAccelPPPTest:
 
             # check local users
             tmp = cmdl(['cat', self._chap_secrets], sudo=True)
-            regex = f"{user}\s+\*\s+{password}\s+\*\s+{download}/{upload}"
+            regex = rf"{user}\s+\*\s+{password}\s+\*\s+{download}/{upload}"
             tmp = re.findall(regex, tmp)
             self.assertTrue(tmp)
 

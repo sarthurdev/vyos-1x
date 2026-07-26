@@ -444,7 +444,7 @@ def _format_show_data(data: list):
         rc, out = rc_cmd(f"ip addr show {intf['ifname']}")
         if rc != 0:
             continue
-        out = re.sub('^\d+:\s+','',out)
+        out = re.sub(r'^\d+:\s+','',out)
         # add additional data already collected
         if 'tunnel6' in intf:
             t6_d = intf['tunnel6']
@@ -452,7 +452,7 @@ def _format_show_data(data: list):
                     t6_d.get('encap_limit', ''), t6_d.get('hoplimit', ''),
                     t6_d.get('tclass', ''), t6_d.get('flowlabel', ''),
                     t6_d.get('flowinfo', ''))
-            out = re.sub('(\n\s+)(link/tunnel6)', f'\g<1>{t6_str}\g<1>\g<2>', out)
+            out = re.sub(r'(\n\s+)(link/tunnel6)', rf'\g<1>{t6_str}\g<1>\g<2>', out)
         print(out)
         ts = intf.get('counters_last_clear', 0)
         if ts:

@@ -218,7 +218,7 @@ class VRFTest(VyOSUnitTestSHIM.TestCase):
             # 1000       red              # VyOS-VRF-red
             # 1001       green            # VyOS-VRF-green
             #  ...
-            regex = f'{table}\s+{vrf}\s+#\s+{description}'
+            regex = rf'{table}\s+{vrf}\s+#\s+{description}'
             self.assertTrue(re.findall(regex, iproute2_config))
 
             frrconfig = self.getFRRconfig(f'vrf {vrf}', stop_section='^exit-vrf')

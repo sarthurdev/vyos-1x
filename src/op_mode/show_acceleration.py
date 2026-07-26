@@ -48,7 +48,7 @@ def show_qat_status():
 def get_qat_devices():
     data_st, err = popen('/etc/init.d/qat_service status', decode='utf-8')
     if not err:
-        elm_lst = re.findall('qat_dev\d', data_st)
+        elm_lst = re.findall(r'qat_dev\d', data_st)
         print('\n'.join(elm_lst))
 
 # Return QAT path in sysfs
