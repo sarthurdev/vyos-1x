@@ -122,6 +122,9 @@ class TestSystemOption(VyOSUnitTestSHIM.TestCase):
         self.assertFalse(os.path.exists(ssh_client_opt_file))
 
     def test_kernel_options(self):
+        if image.is_live_boot():
+            self.skipTest('not applicable from live ISO')
+
         amd_pstate_mode = 'active'
         nohz_full = '2'
         rcu_no_cbs = '1,2,4-5'
