@@ -142,7 +142,7 @@ DIR_ROOTFS_DST: str = f'{DIR_INSTALLATION}/root_dst'
 DIR_ISO_MOUNT: str = f'{DIR_INSTALLATION}/iso_src'
 DIR_DST_ROOT: str = f'{DIR_INSTALLATION}/disk_dst'
 DIR_KERNEL_SRC: str = '/boot/'
-FILE_ROOTFS_SRC: str = '/usr/lib/live/mount/medium/live/filesystem.squashfs'
+FILE_ROOTFS_SRC: str = '/run/live/medium/live/filesystem.squashfs'
 ISO_DOWNLOAD_PATH: str = ''
 
 external_download_script: str = f'{base_dir}/simple-download.py'
