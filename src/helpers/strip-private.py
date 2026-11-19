@@ -18,8 +18,7 @@
 import argparse
 import re
 import sys
-
-from netaddr import IPNetwork, AddrFormatError
+import ipaddress
 
 parser = argparse.ArgumentParser(description='strip off private information from VyOS config')
 
@@ -49,7 +48,7 @@ ipv4_subst = r'xxx.xxx.\2'
 ipv6_re = re.compile(r'([0-9a-fA-F]{1,4}\:){2}([0-9a-fA-F:]+)')
 ipv6_subst = r'xxxx:xxxx:\2'
 
-def ip_match(match: re.Match, subst: str) -> str:
+def ip_match(args, match: re.Match, subst: str) -> str:
     """
     Take a Match and a substitution pattern, check if the match contains a valid IP address, strip
     information if it is. This routine is intended to be passed to `re.sub' as a replacement pattern.
@@ -57,31 +56,31 @@ def ip_match(match: re.Match, subst: str) -> str:
     result = match.group(0)
     # Is this a valid IP address?
     try:
-        addr = IPNetwork(result).ip
+        addr = ipaddress.ip_network(result)
     # No? Then we've got nothing to do with it.
-    except AddrFormatError:
+    except ValueError:
         return result
     # Should we strip it?
-    if args.address or (args.public_address and not addr.is_private()):
+    if args.address or (args.public_address and not addr.is_private):
         return match.expand(subst)
     # No? Then we'll leave it as is.
     else:
         return result
 
-def strip_address(line: str) -> str:
+def strip_address(args, line: str) -> str:
     """
     Strip IPv4 and IPv6 addresses from the given string.
     """
-    return ipv4_re.sub(lambda match: ip_match(match, ipv4_subst), ipv6_re.sub(lambda match: ip_match(match, ipv6_subst), line))
+    return ipv4_re.sub(lambda match: ip_match(args, match, ipv4_subst), ipv6_re.sub(lambda match: ip_match(args, match, ipv6_subst), line))
 
-def strip_lines(rules: tuple) -> None:
+def strip_lines(args, rules: tuple) -> None:
     """
     Read stdin line by line and apply the given stripping rules.
     """
     try:
         for line in sys.stdin:
             if not args.keep_address:
-                line = strip_address(line)
+                line = strip_address(args, line)
             for (condition, regexp, subst) in rules:
                 if condition:
                     line = regexp.sub(subst, line)
@@ -150,4 +149,4 @@ if __name__ == "__main__":
         # Strip SNMP location
         (args.snmp, re.compile(r'(location) \S+'), r'\1 xxxxxx'),
     ]
-    strip_lines(stripping_rules)
+    strip_lines(args, stripping_rules)
